@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2013 RIPE NCC
+ * All rights reserved.
+ */
+
 package net.ripe.db.whois.common.ip;
 
 import com.google.common.net.InetAddresses;
