@@ -32,5 +32,23 @@ sed -i.bak '1i\
 ' $f; done
 ```
 
+## mvn
+the project includes a mvn pom.xm;. This defines it's dependencies and build plugin (findbugs, victims-enforcer).
+
+### mvn package
+Build jar file, will get dependecies, compile and test.
+
+### mvn depency:resolve
+Download required packages
+
+### mvn findbugs:findbugs
+Run [findbugs](https://github.com/h3xstream/find-sec-bugs/wiki/Maven-configuration) and generate report. Does not run by default but does require classes to have been compiled (compile phase)
+
+## mvn findbugs:gui
+open findbugs report in a gui viewer
+
+### [victims-enforcer](https://github.com/victims/victims-enforcer)
+Checks for exploitable library dependencies. Downloads a db of package vuln's and checks each build.
+
 ## license
 Excluding code already licensed by RIPE under the BSD license, the source code is licensed under the GNU Affero General Public License.

@@ -45,24 +45,80 @@
     <plugins>
       <!-- FindBugs Static Analysis -->
       <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>findbugs-maven-plugin</artifactId>
-          <version>2.5.2</version>
-          <configuration>
-              <effort>Max</effort>
-              <threshold>Low</threshold>
-              <failOnError>true</failOnError>
-              <includeFilterFile>${session.executionRootDirectory}/.findbugs/security-include.xml</includeFilterFile>
-              <excludeFilterFile>${session.executionRootDirectory}/.findbugs/security-exclude.xml</excludeFilterFile>
-              <plugins>
-                  <plugin>
-                      <groupId>com.h3xstream.findsecbugs</groupId>
-                      <artifactId>findsecbugs-plugin</artifactId>
-                      <version>1.2.0</version>
-                  </plugin>
-              </plugins>
-          </configuration>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>findbugs-maven-plugin</artifactId>
+        <version>2.5.2</version>
+        <configuration>
+          <effort>Max</effort>
+          <threshold>Low</threshold>
+          <failOnError>true</failOnError>
+          <includeFilterFile>${session.executionRootDirectory}/.findbugs/security-include.xml</includeFilterFile>
+          <excludeFilterFile>${session.executionRootDirectory}/.findbugs/security-exclude.xml</excludeFilterFile>
+          <plugins>
+            <plugin>
+              <groupId>com.h3xstream.findsecbugs</groupId>
+              <artifactId>findsecbugs-plugin</artifactId>
+              <version>1.2.0</version>
+            </plugin>
+          </plugins>
+        </configuration>
       </plugin>
+
+      <!-- Victims Enforcer Dependency Check -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <version>1.1.1</version>
+        <dependencies>
+          <dependency>
+            <groupId>com.redhat.victims</groupId>
+            <artifactId>enforce-victims-rule</artifactId>
+            <version>1.3.4</version>
+            <type>jar</type>
+          </dependency>
+        </dependencies>
+        <executions>
+          <execution>
+            <id>enforce-victims-rule</id>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <rule implementation="com.redhat.victims.VictimsRule">
+                    <!--
+                      Valid options are:
+
+                      disabled: Rule is still run but only INFO level messages aand no errors.
+                      warning : Rule will spit out a warning message but doesn't result in a failure.
+                      fatal   : Rule will spit out an error message and fail the build.
+                    -->
+                    <metadata>warning</metadata>
+
+                    <!--
+                      Valid options are:
+
+                      disabled: Rule is still run but only INFO level messages aand no errors.
+                      warning : Rule will spit out a warning message but doesn't result in a failure.
+                      fatal   : Rule will spit out an error message and fail the build.
+                    -->
+                    <fingerprint>fatal</fingerprint>
+
+                    <!--
+                      Valid options are:
+
+                      auto  : Automatically update the database entries on each build.
+                      daily : Update the database entries once per day.
+                      weekly: Update the database entries once per week.
+                      offline   : Disable the synchronization mechanism.
+                    -->
+                    <updates>weekly</updates>
+                  </rule>
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
     </plugins>
   </build>
 </project>
