@@ -33,7 +33,8 @@ sed -i.bak '1i\
 ```
 
 ## mvn
-the project includes a mvn pom.xm;. This defines it's dependencies and build plugin (findbugs, victims-enforcer).
+the project includes a mvn pom.xml. This defines it's dependencies and build plugin (findbugs, victims-enforcer).
+make sure to install the [Maven Intergration for Eclipse](http://www.eclipse.org/m2e/) plugin.
 
 ### mvn package
 Build jar file, will get dependecies, compile and test.
