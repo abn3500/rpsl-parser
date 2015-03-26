@@ -36,6 +36,17 @@ sed -i.bak '1i\
 the project includes a mvn pom.xml. This defines it's dependencies and build plugin (findbugs, victims-enforcer).
 make sure to install the [Maven Intergration for Eclipse](http://www.eclipse.org/m2e/) plugin.
 
+## javahome
+the project is set to use java1.7. make sure your JAVAHOME environmental variable is set to a JDK >= 1.7.
+
+on OSX with non-stock JDK's installed adding this to your .bashrc/.zshrc seems to do the trick:
+```bash
+export JAVA_HOME=`/usr/libexec/java_home`
+```
+
+### mvn compile
+compiles the classes into the target directory
+
 ### mvn package
 Build jar file, will get dependecies, compile and test.
 
