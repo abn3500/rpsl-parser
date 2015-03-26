@@ -56,7 +56,7 @@ Download required packages
 ### mvn findbugs:findbugs
 Run [findbugs](https://github.com/h3xstream/find-sec-bugs/wiki/Maven-configuration) and generate report. Does not run by default but does require classes to have been compiled (compile phase)
 
-## mvn findbugs:gui
+### mvn findbugs:gui
 open findbugs report in a gui viewer
 
 ### [victims-enforcer](https://github.com/victims/victims-enforcer)
