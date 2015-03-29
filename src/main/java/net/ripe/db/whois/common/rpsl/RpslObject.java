@@ -11,11 +11,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import net.ripe.db.whois.common.domain.CIString;
-import net.ripe.db.whois.common.domain.Identifiable;
-import net.ripe.db.whois.common.domain.ResponseObject;
-import net.ripe.db.whois.common.io.ByteArrayOutput;
 import org.apache.commons.lang3.Validate;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
@@ -33,34 +29,17 @@ import java.util.Map;
 import java.util.Set;
 
 @Immutable
-public class RpslObject implements Identifiable, ResponseObject {
+public class RpslObject {
     private final ObjectType type;
     private final RpslAttribute typeAttribute;
     private final CIString key;
-
-    private Integer objectId;
 
     private List<RpslAttribute> attributes;
     private Map<AttributeType, List<RpslAttribute>> typeCache;
     private int hash;
 
     public RpslObject(final RpslObject oldObject, final List<RpslAttribute> attributes) {
-        this(oldObject.objectId, attributes);
-    }
-
-    public RpslObject(final Integer objectId, final List<RpslAttribute> attributes) {
         this(attributes);
-        this.objectId = objectId;
-    }
-
-    public RpslObject(final Integer objectId, final RpslObject rpslObject) {
-        this.objectId = objectId;
-        this.attributes = rpslObject.attributes;
-        this.type = rpslObject.type;
-        this.typeAttribute = rpslObject.typeAttribute;
-        this.key = rpslObject.key;
-        this.typeCache = rpslObject.typeCache;
-        this.hash = rpslObject.hash;
     }
 
     public RpslObject(final List<RpslAttribute> attributes) {
@@ -91,19 +70,6 @@ public class RpslObject implements Identifiable, ResponseObject {
 
     public static RpslObject parse(final byte[] input) {
         return new RpslObject(RpslObjectBuilder.getAttributes(input));
-    }
-
-    public static RpslObject parse(final Integer objectId, final String input) {
-        return new RpslObject(objectId, RpslObjectBuilder.getAttributes(input));
-    }
-
-    public static RpslObject parse(final Integer objectId, final byte[] input) {
-        return new RpslObject(objectId, RpslObjectBuilder.getAttributes(input));
-    }
-
-    @Override
-    public int getObjectId() {
-        return objectId;
     }
 
     public ObjectType getType() {
@@ -239,28 +205,12 @@ public class RpslObject implements Identifiable, ResponseObject {
         return getOrCreateCache().containsKey(attributeType);
     }
 
-    @Override
-    public void writeTo(final OutputStream out) throws IOException {
-        writeTo(new OutputStreamWriter(out, Charsets.ISO_8859_1));
-    }
-
     public void writeTo(final Writer writer) throws IOException {
         for (final RpslAttribute attribute : getAttributes()) {
             attribute.writeTo(writer);
         }
 
         writer.flush();
-    }
-
-    @Override
-    public byte[] toByteArray() {
-        try {
-            final ByteArrayOutput baos = new ByteArrayOutput();
-            writeTo(baos);
-            return baos.toByteArray();
-        } catch (IOException e) {
-            throw new IllegalStateException("Should never occur", e);
-        }
     }
 
     @Override
@@ -294,7 +244,8 @@ public class RpslObject implements Identifiable, ResponseObject {
         final Set<CIString> values = Sets.newLinkedHashSet();
         for (AttributeType attrType : attributeType) {
             final List<RpslAttribute> rpslAttributes = getOrCreateCache().get(attrType);
-            if (!CollectionUtils.isEmpty(rpslAttributes)) {
+
+            if (!rpslAttributes.isEmpty()) {
                 for (RpslAttribute rpslAttribute : rpslAttributes) {
                     values.addAll(rpslAttribute.getCleanValues());
                 }
