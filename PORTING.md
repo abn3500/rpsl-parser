@@ -33,3 +33,6 @@ probably not a good idea to move this parser to Java 8 reliance any time soon).
 
 Regardless of that, I'm keeping Joda for now, to avoid unexpected bugs due to
 differences which I imagine may exist between the joda and Java 8 time apis.
+
+## Diffutils
+One of the rpsl classes provides unified diffs of objects. This could be useful so it has been retained
