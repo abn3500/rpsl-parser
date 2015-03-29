@@ -21,7 +21,7 @@ package net.ripe.db.whois.common.rpsl;
  *  behaviour there shouldn't be changed by using a generic
  *  RuntimeException 
  */
-//import org.apache.commons.lang3.exception.NestableRuntimeException;
+//import org.apache.commons.lang.exception.NestableRuntimeException;
 
 public class AuthenticationException extends RuntimeException {
 

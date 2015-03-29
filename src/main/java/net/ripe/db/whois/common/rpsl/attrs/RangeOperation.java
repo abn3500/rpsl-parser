@@ -5,7 +5,7 @@
 
 package net.ripe.db.whois.common.rpsl.attrs;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

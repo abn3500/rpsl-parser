@@ -7,7 +7,7 @@ package net.ripe.db.whois.common.rpsl;
 
 import com.google.common.base.Charsets;
 import com.google.common.collect.Lists;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 
 import java.util.*;
 

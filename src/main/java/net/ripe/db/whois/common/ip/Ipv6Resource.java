@@ -9,7 +9,7 @@ import com.google.common.net.InetAddresses;
 import com.google.common.primitives.Longs;
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.AttributeType;
-import org.apache.commons.lang3.Validate;
+import org.apache.commons.lang.Validate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
