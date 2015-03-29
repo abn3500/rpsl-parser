@@ -10,7 +10,7 @@ This library will provide parsing of _"Routing Policy Specification Language"_ t
  + Upload to Maven Central
 
 ## derived work
-This module is based on code from RIPE's [whois](https://github.com/RIPE-NCC/whois). We keep a [mirror](https://gitlab.cecs.anu.edu.au/abn-comp3100/ripe-whois-client) of this on our gitlab.
+This module is based on code from RIPE's [whois](https://github.com/RIPE-NCC/whois/tree/bec0a0c4027a0048bee3bdd9182fd8e85f17d806). We keep a [mirror](https://gitlab.cecs.anu.edu.au/abn-comp3100/ripe-whois-client) of this on our gitlab. 
 
 whois is provided under the GPL license. As such make sure to add the following copyright notice to the beginning of any imported files:
 
@@ -43,6 +43,9 @@ on OSX with non-stock JDK's installed adding this to your .bashrc/.zshrc seems t
 ```bash
 export JAVA_HOME=`/usr/libexec/java_home`
 ```
+
+### mvn generate-sources
+parses the lexer and parser templates and generates the corresponding classes 
 
 ### mvn compile
 compiles the classes into the target directory
