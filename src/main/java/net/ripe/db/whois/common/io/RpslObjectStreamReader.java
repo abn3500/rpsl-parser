@@ -30,14 +30,6 @@ public class RpslObjectStreamReader implements Iterable<String> {
     	}
         return new StringIterator(inputStream);
     }
-    
-//    /**
-//     * Closes the stream or input file
-//     */
-//    public void close() throws IOException
-//    {
-//    	inputStream.close();
-//    }
 
     protected class StringIterator implements Iterator<String> {
         private final BufferedReader bufferedReader;

@@ -13,12 +13,16 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 
 public class App 
 {
+	@Deprecated
 	String[] emitters = {"odlbgp", "dummy"}; //TODO: remove dummy values
 	
 	List<RpslObject> RpslObjects;
 	
 	String outputPath=null, inputPath=null;
+	
+	@Deprecated
 	int ODL_BGP = 0;
+	@Deprecated
 	int emitterType = ODL_BGP; //default emitter type
 	
 	RpslObjectStreamReader reader; //RpslObjectFileReader extends this, so is also covered here
@@ -33,7 +37,7 @@ public class App
     		if( args[i].equals("-i") || args[i].equals("--input") )
     		{
     			if(i+1 >= args.length) //if the index where we expect the input path, is out of bounds..
-    				exitError();
+    				exitFlagError();
 //    			if(findDupeArg(args[i+1])) //if expected index of input path contains a flag instead, exit. ..is that actually illegal on most filesystems..? maybe not. It's a pain though, so I think this is for the best
 //    				exitError();
     			inputPath = args[i+1]; //set input
@@ -42,7 +46,7 @@ public class App
     		else if( args[i].equals("-o") || args[i].equals("--output") )
     		{
     			if(i+1 >= args.length)
-    				exitError();
+    				exitFlagError();
 //    			if(findDupeArg(args[i+1]))
 //    				exitError();
     			outputPath = args[i+1];
@@ -51,11 +55,11 @@ public class App
     		else if( args[i].equals("-e") || args[i].equals("--emitter") )
     		{
     			if(i+1 >= args.length)
-    				exitError();
+    				exitFlagError();
     			emitterType = parseEmitter(args[i+1]); //determine custom emitter type..
     		}
     		else //unrecognised arg
-    			exitError(); //print usage info and error, then exit(-1)
+    			exitFlagError(); //print usage info and error, then exit(-1)
     	}
     	//flags parsed, start reading input
     	
@@ -104,20 +108,21 @@ public class App
 	}
 
     //optional: can be used to check a string for known arguments, so that exceptions can be raised early if a flag is given where a path is expected
-    private static boolean findDupeArg(String arg)
-    {
+    private static boolean findDupeArg(String arg) {
+    	//TODO won't always return true for valid flags?
     	return (arg.equals("-e") || arg.equals("--emitter") || arg.equals("-i") || arg.equals("--input") || arg.equals("-o") || arg.equals("--output"));
     }
     
-    private static void exitError()
-    {
-		//Llama -> SPIT!
-		System.err.println("Unrecognised argument or flag was an even numbered param.\nUsage: -i <input path> -o <output path (optional)> -e (emitter mode enable)");
+    /**
+     * Print an error message and terminate the application
+     */
+    private static void exitFlagError() {
+		System.err.println( "Unrecognised argument or flag was an even numbered param.\n" + 
+				 			"Usage: [-i input path] [-o output path] [-e emitter]");
 		System.exit(-1);
     }
     
-	public static void main( String[] args )
-    {
+	public static void main(String[] args) {
     	//instantiate yourself and jump out of this static context..
     	new App().launch(args);
     }
