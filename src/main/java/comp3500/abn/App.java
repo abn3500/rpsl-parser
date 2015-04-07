@@ -4,7 +4,8 @@
  */
 package comp3500.abn;
 
-import java.util.List;
+import java.io.IOException;
+import java.util.Set;
 
 import net.ripe.db.whois.common.io.RpslObjectFileReader;
 import net.ripe.db.whois.common.io.RpslObjectStreamReader;
@@ -16,7 +17,7 @@ public class App
 	@Deprecated
 	String[] emitters = {"odlbgp", "dummy"}; //TODO: remove dummy values
 	
-	List<RpslObject> RpslObjects;
+	Set<RpslObject> RpslObjects;
 	
 	String outputPath=null, inputPath=null;
 	
@@ -92,8 +93,13 @@ public class App
     	
     	if(outputPath==null)
     		System.out.println(writer.toString());
-    	else
-    		writer.writeToFile(outputPath); //TODO: check the bool that was formerly the second param here..
+		else
+			try {
+				writer.writeToFile(outputPath);
+			} catch (IOException e) {
+				System.err.println("Error writing to file");
+				exitFlagError();
+			}
 	}
 	
     private int parseEmitter(String string)
