@@ -2,6 +2,7 @@ package comp3500.abn;
 
 import java.util.List;
 
+import comp3500.abn.emitters.OutputEmitter;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 
 public class OutputWriter {
