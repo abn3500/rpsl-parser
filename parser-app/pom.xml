@@ -8,7 +8,7 @@
   </parent>
   <artifactId>parser-app</artifactId>
   <packaging>jar</packaging>
-  <name>ripe-rpsl</name>
+  <name>parser-app</name>
 
   <dependencies>
     <dependency>
