@@ -3,9 +3,14 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>comp3500.abn</groupId>
   <artifactId>rpsl-parser</artifactId>
-  <packaging>jar</packaging>
+  <packaging>pom</packaging>
   <version>0.1-SNAPSHOT</version>
-  <name>rpsl-parser</name>
+  <name>rpsl-parser </name>
+
+  <modules>
+    <module>ripe-rpsl</module>
+    <module>parser-app</module>
+  </modules>
 
   <dependencies>
     <dependency>
@@ -13,41 +18,6 @@
       <artifactId>junit</artifactId>
       <version>4.12</version>
       <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>18.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.code.findbugs</groupId>
-      <artifactId>jsr305</artifactId>
-      <version>3.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.10</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-lang</groupId>
-      <artifactId>commons-lang</artifactId>
-      <version>2.6</version>
-    </dependency>
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-      <version>1.10</version>
-    </dependency>
-    <dependency>
-      <groupId>joda-time</groupId>
-      <artifactId>joda-time</artifactId>
-      <version>2.7</version>
-    </dependency>
-    <dependency>
-      <groupId>com.googlecode.java-diff-utils</groupId>
-      <artifactId>diffutils</artifactId>
-      <version>1.3.0</version>
     </dependency>
   </dependencies>
 
@@ -62,42 +32,6 @@
           <source>1.7</source>
           <target>1.7</target>
         </configuration>
-      </plugin>
-
-      <!-- Generate attribute lexers and parsers -->
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>exec-maven-plugin</artifactId>
-        <version>1.2.1</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>exec</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <executable>src/main/parser/bin/generateByaccs</executable>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>de.jflex</groupId>
-        <artifactId>maven-jflex-plugin</artifactId>
-        <version>1.4.3-r1</version>
-        <executions>
-          <execution>
-          <phase>generate-sources</phase>
-            <goals>
-              <goal>generate</goal>
-            </goals>
-            <configuration>
-              <lexDefinitions>
-                <lexDefinition>src/main/parser/jflex</lexDefinition>
-              </lexDefinitions>
-            </configuration>
-          </execution>
-        </executions>
       </plugin>
 
       <!-- FindBugs Static Analysis -->
