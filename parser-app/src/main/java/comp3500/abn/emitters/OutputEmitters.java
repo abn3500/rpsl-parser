@@ -12,7 +12,8 @@ package comp3500.abn.emitters;
  * @author Benjamin George Roberts
  */
 public enum OutputEmitters {
-	NULL(NullEmitter.class), 
+	NULL(NullEmitter.class),
+	XML(XMLEmitter.class),
 	;
 
 	private Class<OutputEmitter> emitterClass;
