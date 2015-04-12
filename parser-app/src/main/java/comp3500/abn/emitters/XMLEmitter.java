@@ -65,7 +65,7 @@ public class XMLEmitter implements OutputEmitter {
 	/**
 	 * Adds an XML representation of the {@link RpslObject} to the parent {@link Node} 
 	 * @param rootDocument Document the object is added to
-	 * @param parent Node the object isto be the child of
+	 * @param parent Node the object is to be the child of
 	 * @param object The object to be converted to XML and added
 	 */
 	private void emitObject(Document rootDocument, Node parent, RpslObject object) {
@@ -77,7 +77,14 @@ public class XMLEmitter implements OutputEmitter {
 		objectElement.setAttribute("value", object.getTypeAttribute().getCleanValue().toString());
 		
 		//Append each attribute as a child of objectElement
+		Boolean firstAttr = true;
 		for(RpslAttribute attr : object.getAttributes()) {
+			//Skip the type attribute
+			if(firstAttr) {
+				firstAttr = false;
+				continue;
+			}
+				
 			//Attributes can be single or multi valued, Using the set will cover both cases
 			Set<CIString> attrValues = attr.getCleanValues();
 			
