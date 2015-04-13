@@ -17,10 +17,11 @@ public class OutputWriter {
 
 	OutputEmitter outputEmitter; //= defaultEmitter; //TODO:
 	Set<RpslObject> rpslObjects;
-	
-	public OutputWriter(Set<RpslObject> rpslObjects) {
-		this.rpslObjects = rpslObjects;
-	}
+
+	//TODO:Not implemented
+//	public OutputWriter(Set<RpslObject> rpslObjects) {
+//		this.rpslObjects = rpslObjects;
+//	}
 	
 	public OutputWriter(Set<RpslObject> rpslObjects, OutputEmitter emitter) {
 		this.rpslObjects = rpslObjects;
