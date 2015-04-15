@@ -80,15 +80,107 @@ public class XMLEmitterTest {
 			"remarks:  hostmaster@apnic.net 970528\n" + 
 			"source:   APNIC\n" + 
 			"changed:  hm-changed@apnic.net 20111109\n";
+	private static String EXAMPLE_RPSL_XML_OUTPUT = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" + 
+			"<aut-num value=\"AS7574\">\n" + 
+			"<as-name>AARNET-NT-RNO</as-name>\n" + 
+			"<descr>Australian Academic and Reasearch Network (AARNet)</descr>\n" + 
+			"<descr>Northern Territory regional network organisation</descr>\n" + 
+			"<country>AU</country>\n" + 
+			"<import>\n" + 
+			"<from>AS7474</from>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"</import>\n" + 
+			"<import>\n" + 
+			"<from>AS7569</from>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"<accept>AS7569 AS4776 AS7570 AS7572 AS4738 AS7571 AS7574 AS7573 AS1221 AS7474</accept>\n" + 
+			"</import>\n" + 
+			"<import>\n" + 
+			"<from>AS4746</from>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"<accept>AS7569 AS4776 AS7570 AS7572 AS4738 AS7571 AS7574 AS7573 AS1221 AS7474 AS4775</accept>\n" + 
+			"</import>\n" + 
+			"<import>\n" + 
+			"<from>AS7570</from>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"<accept>AS7569 AS4776 AS7570 AS7572 AS4738 AS7571 AS7574 AS7573 AS1221 AS7474</accept>\n" + 
+			"</import>\n" + 
+			"<import>\n" + 
+			"<from>AS7572</from>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"<accept>AS7569 AS4776 AS7570 AS7572 AS4738 AS7571 AS7574 AS7573 AS1221 AS7474</accept>\n" + 
+			"</import>\n" + 
+			"<import>\n" + 
+			"<from>AS4738</from>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"<accept>AS7569 AS4776 AS7570 AS7572 AS4738 AS7571 AS7574 AS7573 AS1221 AS7474 AS4806 AS4739 AS4807</accept>\n" + 
+			"</import>\n" + 
+			"<import>\n" + 
+			"<from>AS7571</from>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"<accept>AS7569 AS4776 AS7570 AS7572 AS4738 AS7571 AS7574 AS7573 AS1221 AS7474 AS4806 AS4739 AS4807</accept>\n" + 
+			"</import>\n" + 
+			"<import>\n" + 
+			"<from>AS7573</from>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"<accept>AS7573</accept>\n" + 
+			"</import>\n" + 
+			"<export>\n" + 
+			"<to>AS7474</to>\n" + 
+			"<announce>AS7574</announce>\n" + 
+			"</export>\n" + 
+			"<export>\n" + 
+			"<to>AS7569</to>\n" + 
+			"<announce>AS7574</announce>\n" + 
+			"</export>\n" + 
+			"<export>\n" + 
+			"<to>AS4746</to>\n" + 
+			"<announce>AS7574</announce>\n" + 
+			"</export>\n" + 
+			"<export>\n" + 
+			"<to>AS7570</to>\n" + 
+			"<announce>AS7574</announce>\n" + 
+			"</export>\n" + 
+			"<export>\n" + 
+			"<to>AS7572</to>\n" + 
+			"<announce>AS7574</announce>\n" + 
+			"</export>\n" + 
+			"<export>\n" + 
+			"<to>AS4738</to>\n" + 
+			"<announce>AS7574</announce>\n" + 
+			"</export>\n" + 
+			"<export>\n" + 
+			"<to>AS7571</to>\n" + 
+			"<announce>AS7574</announce>\n" + 
+			"</export>\n" + 
+			"<export>\n" + 
+			"<to>AS7573</to>\n" + 
+			"<announce>AS7574</announce>\n" + 
+			"</export>\n" + 
+			"<default>\n" + 
+			"<to>AS7474</to>\n" + 
+			"<action>pref = 100</action>\n" + 
+			"</default>\n" + 
+			"<default>\n" + 
+			"<to>AS1221</to>\n" + 
+			"<action>pref = 50</action>\n" + 
+			"</default>\n" + 
+			"<admin-c>GM2-AP</admin-c>\n" + 
+			"<tech-c>AC10-AP</tech-c>\n" + 
+			"<mnt-by>MAINT-AARNET-AP</mnt-by>\n" + 
+			"<remarks>hostmaster@apnic.net 970528</remarks>\n" + 
+			"<source>APNIC</source>\n" + 
+			"<changed>hm-changed@apnic.net 20111109</changed>\n" + 
+			"</aut-num>\n" + 
+			"";
+	
 	@Test
 	public void generatesXMLFromRPSL() {
-		//TODO Codify correct output
 		OutputEmitter xmlEmitter = new XMLEmitter();
 		Set<RpslObject> objects = parseRPSL(EXAMPLE_RPSL_STRING);
 		String xmlString = xmlEmitter.emit(objects);
-		System.out.println(xmlString);
 		assertNotEquals("Should generate XML", "", xmlString);
-		fail("correct oitput not implemented");
+		assertEquals("Should match reference XML output", EXAMPLE_RPSL_XML_OUTPUT, xmlString);
 	}
 	
 	@Test
