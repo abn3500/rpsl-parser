@@ -4,8 +4,9 @@
  */
 package comp3500.abn;
 
-import java.io.IOException;
-import java.util.Set;
+import java.io.IOException; 
+
+import org.apache.commons.lang3.StringUtils;
 
 import comp3500.abn.emitters.OutputEmitter;
 import comp3500.abn.emitters.OutputEmitters;
@@ -16,123 +17,158 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 
 public class App 
 {
-	String outputPath=null, inputPath=null;
+	private static final String USAGE_STRING  = "Usage: \n"
+											+ "[-i/--input input path] [-o/--output output path] [-e/--emitter emitter]\n" 
+											+ "--list-emitters\n "
+											+ "-h/--help";
+	String outputPath = null;
 	RpslObjectStreamReader reader; //RpslObjectFileReader extends this, so is also covered here
-	OutputWriter writer = null;
+	OutputWriter writer;
 	
 	OutputEmitter emitter;
-	Set<RpslObject> RpslObjects;
 	
-	boolean debug = true;
-	
-	private void dprint(String msg)
-	{
-		if(debug)
-			System.out.println("DEBUG: " + msg);
+	/**
+	 * Initialise an instance of the application.
+	 * @param args command line arguments to parse
+	 */
+	public App(String args[]) {
+		parseArguments(args);
 	}
 	
-	public void launch(String[] args) //non-static start point
-	{
-		dprint("started");
-		//parse input flags..
-    	for(int i=0; i<args.length; i+=2)
-    	{
-    		if( args[i].equals("-i") || args[i].equals("--input") )
-    		{
-    			if(i+1 >= args.length) //if the index where we expect the input path, is out of bounds..
-    				exitFlagError();
-
-    			inputPath = args[i+1]; //set input
-    		}
-    		else if( args[i].equals("-o") || args[i].equals("--output") )
-    		{
-    			if(i+1 >= args.length)
-    				exitFlagError();
-    			
-    			outputPath = args[i+1];
-    		}
-    		else if( args[i].equals("-e") || args[i].equals("--emitter") )
-    		{
-    			if(i+1 >= args.length)
-    				exitFlagError();
-    			
-    			emitter = OutputEmitters.get(args[i+1]); //determine custom emitter type..
-    		}
-    		else //unrecognised arg
-    			exitFlagError(); //print usage info and error, then exit(-1)
-    	}
-    	//flags parsed, start reading input
-    	dprint("Flags parsed");
-    	
-    	if(inputPath==null) //if no input path specified, try to read from stdin
-    		reader = new RpslObjectStreamReader(System.in);
-    	else
-    		reader = new RpslObjectFileReader(inputPath);
-    	
-    	dprint("reader set up");
+	/**
+	 * Main parser application logic
+	 */
+	public void run() {    	
     	//parse input into Rpsl objects..
     	for(String stringObject : reader)
     	{
-    		//RpslObjects.add( (new RpslObjectBuilder(stringObject).get()) );
-    		dprint("Calling parse..");
-    		RpslObjects.add(RpslObject.parse(stringObject));
+    		//parse can return null or throw exceptions
+    		try {
+        		RpslObject object = RpslObject.parse(stringObject);
+    			if (object == null)
+    				throw new NullPointerException("Object failed to parse");
+        		
+        		writer.addObject(object);
+    		} catch (NullPointerException | IllegalArgumentException e) {
+    			//Object failed to parse, print error with excerpt of object
+    			String[] splitObject = stringObject.split("\n");
+    			System.err.println("Unable to parse following object, skipping... ");
+    			
+    			//Print object excerpt
+    			for(int i = 0; i < 3 && i < splitObject.length; i++) {
+    				System.err.println(splitObject[i]);
+    				if(i == 2) //We only printed part of the object
+    					System.err.println("...");
+    			}
+    		}
     	}
-    	dprint("input parsed");
-//    	//attempt to close input
-//    	try
-//    	{
-//			reader.close();
-//		} catch (IOException e) {e.printStackTrace();}
-    	
-    	//instantiate outputWriter, which will call the emitter on demand and take the resultant string, which will then be sent to stdout or a file (below):
-    	writer = new OutputWriter(RpslObjects,emitter);
-    	
-    	dprint("Writer instantiated");
-    	
-    	if(outputPath==null)
+    	    	
+    	//Emit objects to stdout or file depending on outputPath
+    	if(outputPath==null) {
     		System.out.println(writer.toString());
-		else
-		{
+    	} else {
 			try {
 				writer.writeToFile(outputPath);
 			} catch (IOException e) {
 				System.err.println("Error writing to file");
-				exitFlagError();
+				System.exit(-1);
 			}
 		}
-    	dprint("Done");
-	} //end launch()
-	
-	
-//    private int parseEmitter(String string)
-//    {
-//    	//determine index/id of emitter name passed in
-//		for(int i=0; i<emitters.length; i++)
-//		{
-//			if(emitters[i].equals(string))
-//				return i;
-//		}
-//		throw new IllegalArgumentException("Unknown emitter type");
-//	}
+    	
+	}
 
-	
-    //optional: can be used to check a string for known arguments, so that exceptions can be raised early if a flag is given where a path is expected
-//    private static boolean findDupeArg(String arg) {
-//    	//TODO won't always return true for valid flags?
-//    	return (arg.equals("-e") || arg.equals("--emitter") || arg.equals("-i") || arg.equals("--input") || arg.equals("-o") || arg.equals("--output"));
-//    }
+	/**
+	 * Parses the command line flags and initialises the emitter, reader, writer and output path of the app.
+	 * Duplicate arguments cause the application to exit
+	 * @param args Array of command line arguments to parse
+	 */
+	private void parseArguments(String[] args) {
+		String inputPath = null, emitterName = null;
+		int i = 0;
+
+		//parse arguments, terminate when index is out of argument array bounds
+		while (i < args.length) {
+			switch(args[i]) {
+				case "-i":
+				case "--input":
+					if(i + 1 >= args.length || inputPath != null)
+						exitFlagError();
+					else
+						inputPath = args[i+1];
+					i += 2;
+					break;
+				case "-o":
+				case "--output":
+					if(i + 1 >= args.length || outputPath != null)
+						exitFlagError();
+					else
+						outputPath = args[i+1];
+					i += 2;
+					break;
+				case "-e":
+				case "--emitter":
+					if(i+1 >= args.length || emitterName != null)
+						exitFlagError();
+					else
+						emitterName = args[i+1];
+					i += 2;
+					break;
+				case "--list-emitters":
+					exitListEmitters();
+				case "-h":
+				case "--help":
+					exitUsage();
+				default:
+					exitFlagError();
+			}
+		}
+		
+		//Get the emitter
+		if(emitterName != null)
+			emitter = OutputEmitters.get(emitterName);
+		else
+			emitter = OutputEmitters.defaultEmitter.get();
+		
+		//Initialise the correct reader
+		if(inputPath != null)
+			reader = new RpslObjectFileReader(inputPath);
+		else
+			reader = new RpslObjectStreamReader(System.in);	
+		
+		//Initialise a writer
+		writer = new OutputWriter(emitter);
+	}
     
     /**
      * Print an error message and terminate the application
      */
     private static void exitFlagError() {
-		System.err.println( "Unrecognised argument or flag was an even numbered param.\n" + 
-				 			"Usage: [-i input path] [-o output path] [-e emitter]");
+		System.err.println( "Unrecognised argument or flag was an even numbered param.\n" + USAGE_STRING);
 		System.exit(-1);
     }
     
+    /**
+     * List the emitters available to the user and exit the application
+     */
+    private static void exitListEmitters() {
+		System.out.println("Available emitters: " + StringUtils.join(OutputEmitters.values(), ", "));
+		System.exit(0);
+    }
+    
+    /**
+     * Print the usage string
+     */
+    private static void exitUsage() {
+    	System.out.println(USAGE_STRING);
+    	System.exit(0);
+    }
+    
+    /**
+     * Application entrypoint
+     * @param args command line arguments
+     */
 	public static void main(String[] args) {
     	//instantiate yourself and jump out of this static context..
-    	new App().launch(args);
+    	new App(args).run();
     }
 }

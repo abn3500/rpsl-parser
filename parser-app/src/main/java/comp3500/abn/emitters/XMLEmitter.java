@@ -5,7 +5,10 @@
 
 package comp3500.abn.emitters;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -20,11 +23,14 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import comp3500.abn.rpsl.AttributeLexerWrapper;
+import difflib.StringUtills;
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
 import net.ripe.db.whois.common.rpsl.RpslObject;
@@ -84,22 +90,46 @@ public class XMLEmitter implements OutputEmitter {
 				firstAttr = false;
 				continue;
 			}
-				
-			//Attributes can be single or multi valued, Using the set will cover both cases
-			Set<CIString> attrValues = attr.getCleanValues();
 			
 			//If the attribute contains a comment, prepend it
 			if(attr.getCleanComment() != null) {
 				Comment attrComment = rootDocument.createComment(attr.getCleanComment());
 				objectElement.appendChild(attrComment);
 			}
+			
+
+			//Append the attribute elements to a tag of its type
+			Element attrElement = rootDocument.createElement(attr.getType().getName());
+			try {
+				//Try to use a Lexer if it exists. This results in more readable XML
 				
-			//Append the attribute elements
-			for(CIString attrValue : attrValues) {
-				Element attrElement = rootDocument.createElement(attr.getType().getName());
-				attrElement.setTextContent(attrValue.toString());
-				objectElement.appendChild(attrElement);
+				AttributeLexerWrapper lexer = new AttributeLexerWrapper(attr.getType().getName());
+				StringReader attrReader = new StringReader(attr.getCleanValue().toString());
+				
+				for(Pair<String, List<String>> pair : lexer.parse(attrReader)) {
+					//Our pairs look like ("keyword", "list of values"), add them ass <keyword>values...</>
+					Element valueElement = rootDocument.createElement(pair.getLeft());
+					valueElement.setTextContent(StringUtills.join(pair.getRight(), " "));
+					attrElement.appendChild(valueElement);
+				}
+			} catch(ClassNotFoundException e) {
+				//No lexer, add this attirbute as <type>value</type>. 
+				System.err.println("No lexer for " + attr.getType().getName() + ", attribute will be added to object unparsed");
+				Set<CIString> attrValues = attr.getCleanValues();
+				
+				//Add a tag for each attribute
+				for(CIString attrValue : attrValues) {
+					attrElement = rootDocument.createElement(attr.getType().getName());
+					attrElement.setTextContent(attrValue.toString());
+				}
+			} catch (IOException e) {
+				System.err.println("Error parsing" + attr.getType().getName() + ", attribute will not be added");
+				e.printStackTrace();
+				continue;
 			}
+			
+			//Append the attribute element, regardless of whether it was lexed or manually input
+			objectElement.appendChild(attrElement);
 		}
 		
 		//Append the object any any comment on the type attribute to the parent node
