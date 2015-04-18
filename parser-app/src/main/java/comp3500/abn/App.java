@@ -23,8 +23,17 @@ public class App
 	OutputEmitter emitter;
 	Set<RpslObject> RpslObjects;
 	
+	boolean debug = true;
+	
+	private void dprint(String msg)
+	{
+		if(debug)
+			System.out.println("DEBUG: " + msg);
+	}
+	
 	public void launch(String[] args) //non-static start point
 	{
+		dprint("started");
 		//parse input flags..
     	for(int i=0; i<args.length; i+=2)
     	{
@@ -53,19 +62,22 @@ public class App
     			exitFlagError(); //print usage info and error, then exit(-1)
     	}
     	//flags parsed, start reading input
+    	dprint("Flags parsed");
     	
     	if(inputPath==null) //if no input path specified, try to read from stdin
     		reader = new RpslObjectStreamReader(System.in);
     	else
     		reader = new RpslObjectFileReader(inputPath);
     	
+    	dprint("reader set up");
     	//parse input into Rpsl objects..
     	for(String stringObject : reader)
     	{
     		//RpslObjects.add( (new RpslObjectBuilder(stringObject).get()) );
+    		dprint("Calling parse..");
     		RpslObjects.add(RpslObject.parse(stringObject));
     	}
-    	
+    	dprint("input parsed");
 //    	//attempt to close input
 //    	try
 //    	{
@@ -74,6 +86,8 @@ public class App
     	
     	//instantiate outputWriter, which will call the emitter on demand and take the resultant string, which will then be sent to stdout or a file (below):
     	writer = new OutputWriter(RpslObjects,emitter);
+    	
+    	dprint("Writer instantiated");
     	
     	if(outputPath==null)
     		System.out.println(writer.toString());
@@ -86,7 +100,7 @@ public class App
 				exitFlagError();
 			}
 		}
-    	
+    	dprint("Done");
 	} //end launch()
 	
 	
