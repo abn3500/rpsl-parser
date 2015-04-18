@@ -6,6 +6,8 @@ package comp3500.abn;
 
 import java.io.IOException; 
 
+import org.apache.commons.lang3.StringUtils;
+
 import comp3500.abn.emitters.OutputEmitter;
 import comp3500.abn.emitters.OutputEmitters;
 import net.ripe.db.whois.common.io.RpslObjectFileReader;
@@ -15,6 +17,10 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 
 public class App 
 {
+	private static final String USAGE_STRING  = "Usage: \n"
+											+ "[-i/--input input path] [-o/--output output path] [-e/--emitter emitter]\n" 
+											+ "--list-emitters\n "
+											+ "-h/--help";
 	String outputPath = null;
 	RpslObjectStreamReader reader; //RpslObjectFileReader extends this, so is also covered here
 	OutputWriter writer;
@@ -107,6 +113,11 @@ public class App
 						emitterName = args[i+1];
 					i += 2;
 					break;
+				case "--list-emitters":
+					exitListEmitters();
+				case "-h":
+				case "--help":
+					exitUsage();
 				default:
 					exitFlagError();
 			}
@@ -132,9 +143,24 @@ public class App
      * Print an error message and terminate the application
      */
     private static void exitFlagError() {
-		System.err.println( "Unrecognised argument or flag was an even numbered param.\n" + 
-				 			"Usage: [-i input path] [-o output path] [-e emitter]");
+		System.err.println( "Unrecognised argument or flag was an even numbered param.\n" + USAGE_STRING);
 		System.exit(-1);
+    }
+    
+    /**
+     * List the emitters available to the user and exit the application
+     */
+    private static void exitListEmitters() {
+		System.out.println("Available emitters: " + StringUtils.join(OutputEmitters.values(), ", "));
+		System.exit(0);
+    }
+    
+    /**
+     * Print the usage string
+     */
+    private static void exitUsage() {
+    	System.out.println(USAGE_STRING);
+    	System.exit(0);
     }
     
     /**
