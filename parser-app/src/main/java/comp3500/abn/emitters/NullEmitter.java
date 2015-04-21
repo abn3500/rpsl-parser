@@ -21,4 +21,8 @@ public class NullEmitter implements OutputEmitter {
 		return "";
 	}
 
+	@Override
+	public void setArguments(Set<String> arguments) {		
+	}
+
 }

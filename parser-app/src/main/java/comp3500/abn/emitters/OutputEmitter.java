@@ -23,4 +23,10 @@ public interface OutputEmitter {
 	 * @return String of formated objects
 	 */
 	public String emit(Set<RpslObject> objects);
+	
+	/**
+	 * Provide a set of arguments to the emitter instance. Implementers don't nessecarily have to accept arguments
+	 * @param arguments Set of arguments to apply
+	 */
+	 void setArguments(Set<String> arguments);
 }

@@ -178,4 +178,11 @@ public class XMLEmitter implements OutputEmitter {
 
 	}
 
+	/**
+	 * XMLEmitter doesn't accept arguments set
+	 */
+	@Override
+	public void setArguments(Set<String> arguments) {		
+	}
+
 }
