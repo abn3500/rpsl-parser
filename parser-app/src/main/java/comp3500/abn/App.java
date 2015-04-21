@@ -5,6 +5,8 @@
 package comp3500.abn;
 
 import java.io.IOException; 
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -18,7 +20,7 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 public class App 
 {
 	private static final String USAGE_STRING  = "Usage: \n"
-											+ "[-i/--input input path] [-o/--output output path] [-e/--emitter emitter]\n" 
+											+ "[-i/--input input path] [-o/--output output path] [-e/--emitter emitter] [[-t/--option option]] \n" 
 											+ "--list-emitters\n "
 											+ "-h/--help";
 	String outputPath = null;
@@ -84,6 +86,7 @@ public class App
 	 */
 	private void parseArguments(String[] args) {
 		String inputPath = null, emitterName = null;
+		Set<String> emitterArguments = new HashSet<String>();
 		int i = 0;
 
 		System.out.println("INFO: parseArguments() started..");
@@ -114,6 +117,14 @@ public class App
 						emitterName = args[i+1];
 					i += 2;
 					break;
+				case "-t":
+				case "--option":
+					if(i+1 >= args.length)
+						exitFlagError();
+					else
+						emitterArguments.add(args[i+1]);
+					i += 2;
+					break;
 				case "--list-emitters":
 					exitListEmitters();
 				case "-h":
@@ -124,11 +135,15 @@ public class App
 			}
 		}
 		
-		//Get the emitter
-		if(emitterName != null)
-			emitter = OutputEmitters.get(emitterName);
+		//Get the emitter and instantiate with arguments if present
+		if(emitterArguments.size() > 0)
+			emitter = (emitterName != null) ? 
+					(OutputEmitters.get(emitterName, emitterArguments)) : 
+					(OutputEmitters.defaultEmitter.get(emitterArguments));
 		else
-			emitter = OutputEmitters.defaultEmitter.get();
+			emitter = (emitterName != null) ? 
+					(OutputEmitters.get(emitterName)) :
+					(OutputEmitters.defaultEmitter.get());
 		
 		//Initialise the correct reader
 		if(inputPath != null)

@@ -5,6 +5,8 @@
 
 package comp3500.abn.emitters;
 
+import java.util.Set;
+
 
 /**
  * Enumeration of the classes implementing the {@link OutputEmitter} interface.
@@ -19,8 +21,9 @@ public enum OutputEmitters {
 	private Class<OutputEmitter> emitterClass;
 	public static final OutputEmitters defaultEmitter = NULL;
 	
-	private OutputEmitters(Class emitterClass) {
-		this.emitterClass = emitterClass;
+	@SuppressWarnings("unchecked")
+	private OutputEmitters(Class<?> emitterClass) {
+		this.emitterClass = (Class<OutputEmitter>) emitterClass;
 	}
 	
 	/**
@@ -44,6 +47,12 @@ public enum OutputEmitters {
 		return emitter;
 	}
 	
+	public OutputEmitter get(Set<String> arguments) {
+		OutputEmitter emitter = get();
+		emitter.setArguments(arguments);
+		return emitter;
+	}
+	
 	/**
 	 * Instantiates an {@link OutputEmitter} corresponding with the enumerator matching the name parameter.
 	 * If the emitter cannot be instantiated an instance of the default emitter ({@link NullEmitter}) is returned. 
@@ -56,6 +65,12 @@ public enum OutputEmitters {
 		} catch (IllegalArgumentException e) {
 			return defaultEmitter.get();
 		}
+	}
+	
+	public static OutputEmitter get(String name, Set<String> arguments) {
+		OutputEmitter e = get(name);
+		e.setArguments(arguments);
+		return e;
 	}
 	
 }
