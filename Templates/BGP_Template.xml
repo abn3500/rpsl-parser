@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!--
+      Copyright (c) 2013 Cisco Systems, Inc. and others.  All rights reserved.
+ 
+ This program and the accompanying materials are made available under the
+ terms of the Eclipse Public License v1.0 which accompanies this distribution,
+ and is available at http://www.eclipse.org/legal/epl-v10.html
+-->
+<snapshot>
+    <required-capabilities>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg?module=config-bgp-rib&amp;revision=2013-07-01</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi?module=config-bgp-rib-spi&amp;revision=2013-11-15</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl?module=bgp-rib-impl&amp;revision=2013-04-09</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:topology:provider?module=config-bgp-topology-provider&amp;revision=2013-11-15</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:netty?module=netty&amp;revision=2013-11-19</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:protocol:framework?module=protocol-framework&amp;revision=2014-03-13</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=config-topology-api&amp;revision=2013-11-15</capability>
+    </required-capabilities>
+    <configuration>
+ 
+        <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+            <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+                <module>
+                    <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
+                    <name>example-reconnect-strategy-factory</name>
+                    <min-sleep>1000</min-sleep>
+                    <max-sleep>180000</max-sleep>
+                    <sleep-factor>2.00</sleep-factor>
+                    <connect-time>5000</connect-time>
+                    <executor>
+                        <type xmlns:netty="urn:opendaylight:params:xml:ns:yang:controller:netty">netty:netty-event-executor</type>
+                        <name>global-event-executor</name>
+                    </executor>
+                </module>
+ 
+<!-- Below is to be edited by a BGP XML emitter, to configure IIX peering based
+        on RPSL files. The design is a 1-1 connection between an IIX BGP speaker
+        the customer's router. The BGP speaker just pushes approved routes to
+        the client router, as defined in the RPSL file
+ 
+    - Set up single speaker - done
+    - Add routes to Adj-RIB-Out - working out how to do this
+    - Set up peering with customer router - done
+-->
+                                <module>
+                                        <!-- This is a sample bgp-Speaker -->
+                                        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:sample-server</type>
+                                        <name>BGP-Speaker-1</name>
+                                        <host>192.0.2.1</host><!-- this could be the AS# if we dont have a IP address -->
+                                        <holdtimer>180</holdtimer>
+                                        <bgp-dispatcher>
+                                                <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-dispatcher</type>
+                                                <name>global-bgp-dispatcher</name>
+                                        </bgp-dispatcher>
+                                        <peer-registry>
+                                                <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:peer-registry</type>
+                                                <name>peer-registry</name>
+                                        <!-- add the client's router to this registry, and add the speaker of IIX -->
+                                        </peer-registry>
+                                </module>
+                               
+                                <module>
+                                        <!-- this is one of the server's peers -->
+                                        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:example-peer</type>
+                                        <name>Example-Peer-1</name>
+                                        <host>192.0.2.1</host>
+                                        <holdtimer>180</holdtimer>
+                                        <peer-registry>
+                                        <!-- by giving it's peer registry the same name as BGP-Speaker-1 they become peers -->
+                                                <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:peer-registry</type>
+                                                <name>peer-registry</name>
+                                        </peer-registry>
+                                </module>
+                        </modules>
+                </data>
+        </configuration>
+</snapshot>
