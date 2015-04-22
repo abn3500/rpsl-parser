@@ -1,5 +1,0 @@
-tar cvf byaccj_src.tar \
-src/Makefile src/Makefile.bcc \
-src/defs.h src/warshall.c src/verbose.c src/symtab.c src/skeleton.c src/reader.c src/output.c \
-src/mkpar.c src/main.c src/lr0.c src/lalr.c src/error.c src/closure.c
-gzip byaccj_src.tar
