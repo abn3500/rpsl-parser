@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.Test;
+import org.junit.internal.runners.statements.Fail;
 
 /**
  * Unit test for simple App.
@@ -17,13 +18,14 @@ import org.junit.Test;
 public class AppTest //extends TestCase
 {
 //http://www.avajava.com/tutorials/general-java/how-do-i-run-another-application-from-java/RuntimeExecTest1.java
-	final int timeoutLongs = 3000; //ms to wait before checking app state/killing app
+	private static final int TIMEOUT_STEP_MS = 300; //ms increment to wait while process is running
+	private static final int TIMEOUT_MAX_MS = TIMEOUT_STEP_MS * 10; //max time MS to wait
 	final boolean passthroughOutput = false; //pipe through stdout and stderr from tested app
 	
 	Path tempDirPath, inputPath, outputPath;
 	String sampleArgsXML;
 	Runtime runTime;
-	final String appLaunchCommandWWhitespace = "java -cp target/classes:../ripe-rpsl/target/classes comp3500.abn.App ";
+	private static final String EXEC_COMMAND = "java -cp " + System.getProperty("java.class.path") + " comp3500.abn.App ";
 	
 	/**
 	 * prepare for tests..
@@ -59,33 +61,10 @@ public class AppTest //extends TestCase
 		
     	//http://stackoverflow.com/questions/4741878/redirect-runtime-getruntime-exec-output-with-system-setout
     	System.out.println("INFO: spawning app instance.. will kill after 5 secs..");
-    	Process p = runTime.exec("java -cp target/classes:../ripe-rpsl/target/classes comp3500.abn.App " + sampleArgsXML);
+    	Process p = runTime.exec(EXEC_COMMAND + sampleArgsXML);
     	
-    	BufferedReader childReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-    	String line;    	
-    	while((line = childReader.readLine()) != null)
-    		System.out.println("Child says: " + line);
-    	
-    	try {
-			Thread.sleep(timeoutLongs); //suspend the test runner..
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-    	
-    	try {
-    		int exitCode = p.exitValue(); //p.waitFor(); //on suggestion of Ben's - Nicer way to let it run for a limited time. Only minor detail is whether we could speed things up if it *did* finish quicker..
-    		//https://docs.oracle.com/javase/7/docs/api/java/lang/Process.html#exitValue%28%29
-    		if(exitCode!=0)
-    		{
-    			System.out.println("INFO: App terminated with error status: " + exitCode);
-    			fail("Application exited with error status on valid input: " + exitCode);
-    		}
-    		else
-    			System.out.println("INFO: app terminated successfully");
-    	} catch (IllegalThreadStateException e) {
-    		System.out.println("INFO: App failed to terminate in time");
-    		fail("App failed to terminate within 5 sec");
-    	}
+    	int exitCode = processWait(p);
+    	assertTrue("Application should exit with code 0", exitCode == 0);
     }
 	
 	/**
@@ -98,26 +77,65 @@ public class AppTest //extends TestCase
 		setup();
 		
 		String badargs = "-o -e XMLEmitter nonexistentfilepath";
-		Process p = runTime.exec(appLaunchCommandWWhitespace + badargs);
+		Process p = runTime.exec(EXEC_COMMAND + badargs);
 		
-		BufferedReader childReader = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		BufferedReader childReaderError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-    	String line = null;
-    	String lineErr = null;
-    	while(((line = childReader.readLine()) != null) || ((lineErr = childReaderError.readLine()) !=null))
-    	{
-    		if(line!=null && passthroughOutput)
-    			System.out.println("Child_out: " + line);
-    		if(lineErr!=null && passthroughOutput)
-    			System.out.println("Child_err: " + lineErr);
-    	}
-		
-		Thread.sleep(timeoutLongs); //if this throws an exception.. then frankly I dunno.. I'll think about that later :P //TODO:
-		int eCode = p.exitValue();
+		int eCode = processWait(p);
 		if(eCode==0) { //if success return given (for invalid input), fail
 			System.out.println("INFO: exit code: " + eCode);
 			fail("App should exit with an error code on invalid arguments");
 		}
 		//assertTrue("App should exit with error code -1 on invalid arguments", p.exitValue()==-1);
+	}
+	
+	/**
+	 * Waits for the provided process to terminate or, if it fails to terminate within TIMEOUT_MAX_MS,
+	 * forcefully terminates it and calls {@link Fail}. It will also print out the stdout/stderr of the process
+	 * before returning its exit code
+	 * @param p process to wait for
+	 * @return exit code of process
+	 */
+	private int processWait(Process p) {
+		int timeWaited = 0,
+			retVal = -256;
+		
+		//Repeatedly try to get exit value and sleep on failure (not terminated yet)
+		while(timeWaited < TIMEOUT_MAX_MS) {
+			try {
+				retVal = p.exitValue();
+				break;
+			} catch (IllegalThreadStateException e) {
+				try{
+					Thread.sleep(TIMEOUT_STEP_MS);
+				} catch(InterruptedException ee) {
+					//don't really care about thread interrupts at this point
+				}
+				timeWaited += TIMEOUT_STEP_MS;
+			}
+		}
+		
+		//Clear and print the stdout/stderr buffers
+		BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream())),
+					   stderr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+		String line;
+		try{
+			while((line = stdout.readLine()) != null)
+				System.out.println("Child stdout: " + line);
+		} catch(IOException e) {
+			System.err.println("IOException while reading child stdout");
+		}
+		try {
+			while((line = stderr.readLine()) != null)
+				System.out.println("Child stdout: " + line);
+		} catch(IOException e) {
+			System.err.println("IOException while reading child stderr");
+		}
+		
+		//If it didn't terminate, kill process and fail
+		if(timeWaited >= TIMEOUT_MAX_MS) {
+			p.destroy();
+			fail("Child process did not terminate");
+		}
+		
+		return retVal;
 	}
 }
