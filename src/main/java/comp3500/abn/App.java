@@ -89,7 +89,6 @@ public class App
 		Set<String> emitterArguments = new HashSet<String>();
 		int i = 0;
 
-		System.out.println("INFO: parseArguments() started..");
 		//parse arguments, terminate when index is out of argument array bounds
 		while (i < args.length) {
 			switch(args[i]) {
@@ -153,8 +152,6 @@ public class App
 		
 		//Initialise a writer
 		writer = new OutputWriter(emitter);
-		
-		System.out.println("INFO: parseArguments() returns..");
 	}
     
     /**
@@ -187,7 +184,6 @@ public class App
      */
 	public static void main(String[] args) {
     	//instantiate yourself and jump out of this static context..
-		System.out.println("INFO: app started..");
     	new App(args).run();
     }
 }
