@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<snapshot>
+	<required-capabilities>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg?module=config-bgp-rib&amp;revision=2013-07-01</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi?module=config-bgp-rib-spi&amp;revision=2013-11-15</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl?module=bgp-rib-impl&amp;revision=2013-04-09</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:topology:provider?module=config-bgp-topology-provider&amp;revision=2013-11-15</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:netty?module=netty&amp;revision=2013-11-19</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:protocol:framework?module=protocol-framework&amp;revision=2014-03-13</capability>
+        <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=config-topology-api&amp;revision=2013-11-15</capability>
+    </required-capabilities>
+    <configuration>
+	    <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+	        <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+	            <module>
+	                <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
+	                <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
+	                <min-sleep>{{BGP_RECONNECT_SLEEP_MIN}}</min-sleep>
+	                <max-sleep>{{BGP_RECONNECT_SLEEP_MAX}}</max-sleep>
+	                <sleep-factor>{{BGP_RECONNCET_SLEEP_FACTOR}}</sleep-factor>
+	                <connect-time>{{BGP_RECONNCET_CONNECT_TIME}}</connect-time>
+	                <executor>
+	                    <type xmlns:netty="urn:opendaylight:params:xml:ns:yang:controller:netty">netty:netty-event-executor</type>
+	                    <name>{{BGP_EXECUTOR_NAME}}</name>
+	                </executor>
+	            </module>
+            </modules>
+        </data>
+    </configuration>
+</snapshot>
