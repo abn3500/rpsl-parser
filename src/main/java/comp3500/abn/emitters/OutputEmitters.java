@@ -5,6 +5,7 @@
 
 package comp3500.abn.emitters;
 
+import java.util.Map;
 import java.util.Set;
 
 
@@ -47,7 +48,7 @@ public enum OutputEmitters {
 		return emitter;
 	}
 	
-	public OutputEmitter get(Set<String> arguments) {
+	public OutputEmitter get(Map<String, String> arguments) {
 		OutputEmitter emitter = get();
 		emitter.setArguments(arguments);
 		return emitter;
@@ -67,7 +68,7 @@ public enum OutputEmitters {
 		}
 	}
 	
-	public static OutputEmitter get(String name, Set<String> arguments) {
+	public static OutputEmitter get(String name, Map<String, String> arguments) {
 		OutputEmitter e = get(name);
 		e.setArguments(arguments);
 		return e;

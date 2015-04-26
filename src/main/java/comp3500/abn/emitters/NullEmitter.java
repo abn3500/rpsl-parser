@@ -5,6 +5,7 @@
 
 package comp3500.abn.emitters;
 
+import java.util.Map;
 import java.util.Set;
 
 import net.ripe.db.whois.common.rpsl.RpslObject;
@@ -22,7 +23,7 @@ public class NullEmitter implements OutputEmitter {
 	}
 
 	@Override
-	public void setArguments(Set<String> arguments) {		
+	public void setArguments(Map<String, String> arguments) {		
 	}
 
 }
