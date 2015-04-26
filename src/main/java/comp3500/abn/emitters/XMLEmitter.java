@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -182,7 +183,7 @@ public class XMLEmitter implements OutputEmitter {
 	 * XMLEmitter doesn't accept arguments set
 	 */
 	@Override
-	public void setArguments(Set<String> arguments) {		
+	public void setArguments(Map<String, String> arguments) {		
 	}
 
 }

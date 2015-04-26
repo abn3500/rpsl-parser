@@ -5,10 +5,10 @@
 
 package comp3500.abn.emitters;
 
+import java.util.Map;
 import java.util.Set;
 
 import comp3500.abn.OutputWriter;
-
 import net.ripe.db.whois.common.rpsl.RpslObject;
 
 /**
@@ -28,5 +28,5 @@ public interface OutputEmitter {
 	 * Provide a set of arguments to the emitter instance. Implementers don't nessecarily have to accept arguments
 	 * @param arguments Set of arguments to apply
 	 */
-	 void setArguments(Set<String> arguments);
+	 void setArguments(Map<String, String> arguments);
 }

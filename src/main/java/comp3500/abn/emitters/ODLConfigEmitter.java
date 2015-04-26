@@ -7,6 +7,8 @@ package comp3500.abn.emitters;
 
 import java.io.StringWriter;
 import java.util.HashSet;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.github.mustachejava.DefaultMustacheFactory;
@@ -57,36 +59,26 @@ public class ODLConfigEmitter implements OutputEmitter {
 	}
 	
 	@Override
-	public void setArguments(Set<String> arguments) {
-		//Assume arguments are x=y format		
-		//Split the arguments by the '=' character and assign to instance variables
-		for(String argument : arguments) {
-			String[] splitArguments = argument.split("=");
-			
-			//Make sure there is only a key and a value
-			if(splitArguments.length != 2) {
-				System.err.println("Invalid argument: " + argument);
-			} else {
-				//Switch on the argument name and set the matching variable
-				try {
-					switch(splitArguments[0]) {
-						case "BGP_PEER_REGISTRY": BGP_PEER_REGISTRY = splitArguments[1]; break;
-						case "BGP_DISPATCHER": BGP_DISPATCHER = splitArguments[1]; break;
-						case "BGP_RECONNECT_SLEEP_MIN": BGP_RECONNECT_SLEEP_MIN = Integer.parseInt(splitArguments[1]); break;
-						case "BGP_RECONNECT_SLEEP_MAX": BGP_RECONNECT_SLEEP_MAX = Integer.parseInt(splitArguments[1]); break;
-						case "BGP_RECONNCET_CONNECT_TIME": BGP_RECONNCET_CONNECT_TIME = Integer.parseInt(splitArguments[1]); break;
-						case "BGP_RECONNCET_SLEEP_FACTOR": BGP_RECONNCET_SLEEP_FACTOR = Double.parseDouble(splitArguments[1]); break;
-						case "BGP_EXECUTOR_NAME": BGP_EXECUTOR_NAME = splitArguments[1]; break;
-						case "BGP_RECONNECT_STRATEGY_NAME": BGP_RECONNECT_STRATEGY_NAME = splitArguments[1]; break;
-						case "BGP_HOLD_TIME": BGP_HOLD_TIME = Integer.parseInt(splitArguments[1]); break;
-						default:
-							System.err.println("Unknown argument: " + argument);
-							break;
-					}
-				} catch(NumberFormatException e) {
-					//We failed to parse an integer or double
-					System.err.println("Failed to parse value: " + argument);
+	public void setArguments(Map<String, String> arguments) {
+		for(Entry<String, String> arg : arguments.entrySet()) {		
+			try {
+				switch(arg.getKey()) {
+					case "BGP_PEER_REGISTRY": BGP_PEER_REGISTRY = arg.getValue(); break;
+					case "BGP_DISPATCHER": BGP_DISPATCHER = arg.getValue(); break;
+					case "BGP_RECONNECT_SLEEP_MIN": BGP_RECONNECT_SLEEP_MIN = Integer.parseInt(arg.getValue()); break;
+					case "BGP_RECONNECT_SLEEP_MAX": BGP_RECONNECT_SLEEP_MAX = Integer.parseInt(arg.getValue()); break;
+					case "BGP_RECONNCET_CONNECT_TIME": BGP_RECONNCET_CONNECT_TIME = Integer.parseInt(arg.getValue()); break;
+					case "BGP_RECONNCET_SLEEP_FACTOR": BGP_RECONNCET_SLEEP_FACTOR = Double.parseDouble(arg.getValue()); break;
+					case "BGP_EXECUTOR_NAME": BGP_EXECUTOR_NAME = arg.getValue(); break;
+					case "BGP_RECONNECT_STRATEGY_NAME": BGP_RECONNECT_STRATEGY_NAME = arg.getValue(); break;
+					case "BGP_HOLD_TIME": BGP_HOLD_TIME = Integer.parseInt(arg.getValue()); break;
+					default:
+						System.err.println("Unknown argument: " + arg.getKey());
+						break;
 				}
+			} catch(NumberFormatException e) {
+				//We failed to parse an integer or double
+				System.err.println("Failed to parse value: " + arg.getValue());
 			}
 		}
 	}
