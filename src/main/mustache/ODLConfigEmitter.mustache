@@ -14,6 +14,7 @@
     <configuration>
 	    <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
 	        <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+	        	<!-- Connection attributes -->
 	            <module>
 	                <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
 	                <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
@@ -26,6 +27,36 @@
 	                    <name>{{BGP_EXECUTOR_NAME}}</name>
 	                </executor>
 	            </module>
+	            
+	            {{#bgpServers}}
+	            <module>
+                    <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:sample-server</type>
+                    <name>{{serverName}}</name>
+                    <host>{{serverHost}}</host>
+                    <holdtimer>{{BGP_HOLD_TIME}}</holdtimer>
+                    <bgp-dispatcher>
+                            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-dispatcher</type>
+                            <name>{{BGP_DISPATCHER}}</name>
+                    </bgp-dispatcher>
+                    <peer-registry>
+                            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:peer-registry</type>
+                            <name>{{serverRegistry}}</name>
+                    </peer-registry>
+                </module>	          
+	            {{/bgpServers}}	            
+                  
+	            {{#bgpPeers}}
+             	<module>
+	                <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:example-peer</type>
+	                <name>{{peerName}}</name>
+	                <host>{{peerHost}}</host>
+	                <holdtimer>{{BGP_HOLD_TIME}}</holdtimer>
+	                <peer-registry>
+	                        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:peer-registry</type>
+	                        <name>{{serverRegistry}}</name>
+	                </peer-registry>
+                </module>
+	            {{/bgpPeers}}
             </modules>
         </data>
     </configuration>
