@@ -1,63 +1,112 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- vi: set et smarttab sw=4 tabstop=4: -->
 <snapshot>
-	<required-capabilities>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg?module=config-bgp-rib&amp;revision=2013-07-01</capability>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi?module=config-bgp-rib-spi&amp;revision=2013-11-15</capability>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl?module=bgp-rib-impl&amp;revision=2013-04-09</capability>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:topology:provider?module=config-bgp-topology-provider&amp;revision=2013-11-15</capability>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:netty?module=netty&amp;revision=2013-11-19</capability>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:protocol:framework?module=protocol-framework&amp;revision=2014-03-13</capability>
-        <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=config-topology-api&amp;revision=2013-11-15</capability>
-    </required-capabilities>
-    <configuration>
-	    <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-	        <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
-	        	<!-- Connection attributes -->
-	            <module>
-	                <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
-	                <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
-	                <min-sleep>{{BGP_RECONNECT_SLEEP_MIN}}</min-sleep>
-	                <max-sleep>{{BGP_RECONNECT_SLEEP_MAX}}</max-sleep>
-	                <sleep-factor>{{BGP_RECONNCET_SLEEP_FACTOR}}</sleep-factor>
-	                <connect-time>{{BGP_RECONNCET_CONNECT_TIME}}</connect-time>
-	                <executor>
-	                    <type xmlns:netty="urn:opendaylight:params:xml:ns:yang:controller:netty">netty:netty-event-executor</type>
-	                    <name>{{BGP_EXECUTOR_NAME}}</name>
-	                </executor>
-	            </module>
-	            
-	            {{#bgpServers}}
-	            <module>
-                    <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:sample-server</type>
-                    <name>{{serverName}}</name>
-                    <host>{{serverHost}}</host>
-                    <holdtimer>{{BGP_HOLD_TIME}}</holdtimer>
-                    <bgp-dispatcher>
-                            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-dispatcher</type>
-                            <name>{{BGP_DISPATCHER}}</name>
-                    </bgp-dispatcher>
-                    <peer-registry>
-                            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:peer-registry</type>
-                            <name>{{serverRegistry}}</name>
-                    </peer-registry>
-                </module>	          
-	            {{/bgpServers}}	            
-                  
-	            {{#bgpPeers}}
-             	<module>
-	                <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:example-peer</type>
-	                <name>{{peerName}}</name>
-	                <host>{{peerHost}}</host>
-	                <holdtimer>{{BGP_HOLD_TIME}}</holdtimer>
-	                <peer-registry>
-	                        <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:peer-registry</type>
-	                        <name>{{serverRegistry}}</name>
-	                </peer-registry>
-                </module>
-	            {{/bgpPeers}}
-            </modules>
-        </data>
-    </configuration>
+  <!-- This template is based on the example BGP speaker/peer configuration found at
+  bgp/controller-config/src/main/resources/initial/41-bgp-example.xml of the BGPPCEP ODL module
+  
+  It assumes the inclusion of the defaults defined in 31-bgp.xml of the same module -->
+  
+  <required-capabilities>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg?module=config-bgp-rib&amp;revision=2013-07-01</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi?module=config-bgp-rib-spi&amp;revision=2013-11-15</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl?module=bgp-rib-impl&amp;revision=2013-04-09</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:topology:provider?module=config-bgp-topology-provider&amp;revision=2013-11-15</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:netty?module=netty&amp;revision=2013-11-19</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:protocol:framework?module=protocol-framework&amp;revision=2014-03-13</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=config-topology-api&amp;revision=2013-11-15</capability>
+  </required-capabilities>
+  <configuration>
+    <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
+      <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+        
+        <!-- Reconnect strategy configuration. -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
+          <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
+          <min-sleep>{{BGP_RECONNECT_SLEEP_MIN}}</min-sleep>
+          <max-sleep>{{BGP_RECONNECT_SLEEP_MAX}}</max-sleep>
+          <sleep-factor>{{BGP_RECONNCET_SLEEP_FACTOR}}</sleep-factor>
+          <connect-time>{{BGP_RECONNCET_CONNECT_TIME}}</connect-time>
+          <executor>
+            <type xmlns:netty="urn:opendaylight:params:xml:ns:yang:controller:netty">netty:netty-event-executor</type>
+            <name>global-event-executor</name> <!-- Defined in 31-bgp.xml -->
+          </executor>
+        </module>
+        
+        <!-- The aut-sys object of the rpsl document is given its own BGP speaker and peer registry-->
+        <!--Default parameters-->
+        <!--<binding-address>0.0.0.0</binding-address>-->
+        <!--Default binding-port 179-->
+        <!-- <binding-port>179</binding-port> -->
+        
+        <!--******************START OF SPEAKERS******************-->
+        {{#bgpServers}}
+        <!-- Peer registry of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:strict-bgp-peer-registry</type>
+          <name>{{peerRegistry}}</name>
+        </module>
+        
+        <!-- BGP speaker of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-acceptor</type>
+          <name>{{name}}</name>
+          <binding-address>{{speakerAddress}}</binding-address>
+          
+          <accepting-bgp-dispatcher>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-dispatcher</type>
+            <name>global-bgp-dispatcher</name> <!-- Defined in 31-bgp.xml -->
+          </accepting-bgp-dispatcher>
+          <accepting-peer-registry>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-registry</type>
+            <name>{{peerRegistry}}</name>
+          </accepting-peer-registry>
+        </module>
+        <!--*****************************************************-->
+        {{/bgpServers}}
+        <!--*******************END OF SPEAKERS*******************-->
+        
+        <!-- Each AS which the aut-sys object exports routes to is assigned a BGP peer and a unique RIB -->
+        
+        <!--*******************START OF PEERS********************-->
+        {{#bgpPeers}}
+        <!-- RIB of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:rib-impl</type>
+          <name>{{rib}}</name>
+          <rib-id>{{rib}}</rib-id>
+          <local-as>{{speaker.asn}}</local-as>
+          <bgp-rib-id>{{speaker.speakerAddress}}</bgp-rib-id> <!-- same for each RIB in speaker, is address of speaker -->
+        </module>
+        <!-- Export table of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-table-type-impl</type>
+          <name>{{tableName}}</name>
+        </module>
+        <!-- BGP Peer of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer</type>
+          <name>{{name}}</name>
+          <host>{{peerAddress}}</host>
+          <holdtimer>{{BGP_HOLD_TIME}}</holdtimer>
+          <rib>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg">prefix:rib</type>
+            <name>{{rib}}</name>
+          </rib>
+          <peer-registry>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-registry</type>
+            <name>{{speaker.peerRegistry}}</name>
+          </peer-registry>
+          <advertized-table>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-table-type</type>
+            <name>{{tableName}}</name>
+          </advertized-table>
+        </module>
+        <!--*****************************************************-->        
+        {{/bgpPeers}}
+        <!--********************END OF PEERS*********************-->        
+      </modules>
+    </data>
+  </configuration>
 </snapshot>

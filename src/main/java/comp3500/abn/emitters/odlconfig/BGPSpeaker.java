@@ -35,9 +35,10 @@ public class BGPSpeaker {
 	/*
 	 * Template values
 	 */
-	String 	serverName = null,
-			serverRegistry = null,
-			serverHost = "MISSING IP ADDRESS";
+	String 	name,
+			speakerAddress,
+			peerRegistry,
+			asn;
 	AutNum	serverASN = null;
 	
 	
@@ -56,11 +57,9 @@ public class BGPSpeaker {
 			autnumObject = object;
 		
 		//This parse method can throw an error. We can't really recover so we won't catch it
-		serverASN = AutNum.parse(autnumObject.getTypeAttribute().getCleanValue());
-		serverName = autnumObject.getValueForAttribute(AttributeType.AS_NAME).toString();
-		
-		//Allow an individual registry per bgp speaker
-		serverRegistry = serverName + "_REGISTRY";
+		asn = "AS" + AutNum.parse(autnumObject.getTypeAttribute().getCleanValue()).getValue();
+		name = autnumObject.getValueForAttribute(AttributeType.AS_NAME).toString();
+		peerRegistry = name + "-registry";
 	}
 	
 	/**

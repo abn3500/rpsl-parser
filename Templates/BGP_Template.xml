@@ -20,6 +20,7 @@
     </required-capabilities>
     <configuration>
  
+        com
         <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
             <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
                 <module>

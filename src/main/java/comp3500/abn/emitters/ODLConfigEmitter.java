@@ -33,10 +33,7 @@ public class ODLConfigEmitter implements OutputEmitter {
 	 * BGP config file constants. 
 	 * These are configured by passing emitter arguments and are included in the template.
 	 */
-	String 	BGP_PEER_REGISTRY 			= "peer-registry",
-	      	BGP_DISPATCHER 				= "global-bgp-dispatcher",
-  			BGP_RECONNECT_STRATEGY_NAME = "reconnect-strategy-factory",
-	      	BGP_EXECUTOR_NAME 			= "global-event-executor";
+	String 	BGP_RECONNECT_STRATEGY_NAME = "reconnect-strategy-factory";
 	int		BGP_RECONNECT_SLEEP_MIN 	= 1000,
 			BGP_RECONNECT_SLEEP_MAX 	= 180000,
 			BGP_RECONNCET_CONNECT_TIME 	= 5000,
@@ -63,13 +60,10 @@ public class ODLConfigEmitter implements OutputEmitter {
 		for(Entry<String, String> arg : arguments.entrySet()) {		
 			try {
 				switch(arg.getKey()) {
-					case "BGP_PEER_REGISTRY": BGP_PEER_REGISTRY = arg.getValue(); break;
-					case "BGP_DISPATCHER": BGP_DISPATCHER = arg.getValue(); break;
 					case "BGP_RECONNECT_SLEEP_MIN": BGP_RECONNECT_SLEEP_MIN = Integer.parseInt(arg.getValue()); break;
 					case "BGP_RECONNECT_SLEEP_MAX": BGP_RECONNECT_SLEEP_MAX = Integer.parseInt(arg.getValue()); break;
 					case "BGP_RECONNCET_CONNECT_TIME": BGP_RECONNCET_CONNECT_TIME = Integer.parseInt(arg.getValue()); break;
 					case "BGP_RECONNCET_SLEEP_FACTOR": BGP_RECONNCET_SLEEP_FACTOR = Double.parseDouble(arg.getValue()); break;
-					case "BGP_EXECUTOR_NAME": BGP_EXECUTOR_NAME = arg.getValue(); break;
 					case "BGP_RECONNECT_STRATEGY_NAME": BGP_RECONNECT_STRATEGY_NAME = arg.getValue(); break;
 					case "BGP_HOLD_TIME": BGP_HOLD_TIME = Integer.parseInt(arg.getValue()); break;
 					default:

@@ -20,19 +20,21 @@ public class BGPPeer {
 	/*
 	 * Template values
 	 */
-	AutNum peerASN = null;
-	String peerName = null,
-		   peerHost = "MISSING IP ADDRESS",
-		   serverRegistry = null;
-	
+	BGPSpeaker speaker;
+	String name,
+		   peerAddress,
+		   rib,
+		   tableName;	
 	/**
 	 * Construct BGP Peer for a AS and with a given speaker
 	 * @param speaker
 	 */
 	public BGPPeer(BGPSpeaker speaker, AutNum asn) {
-		this.peerASN = asn;
-		this.peerName = "AS" + asn.getValue();
-		this.serverRegistry = speaker.serverRegistry; //Add to the parent speakers registry
+		this.speaker = speaker;
+		
+		this.name = String.format("AS%s-in-%s", asn.getValue(), speaker.name);
+		this.rib = name + "-rib";
+		this.tableName = name + "-export";
 	}
 	
 	/**
