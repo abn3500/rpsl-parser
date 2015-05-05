@@ -16,11 +16,11 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
  * Represents the peer connections of the OpenDaylight configuration file.
  * @author Benjamin George Roberts
  */
-public class BGPPeer {
+public class BGPPeerDeprecated {
 	/*
 	 * Template values
 	 */
-	BGPSpeaker speaker;
+	BGPSpeakerDeprecated speaker;
 	String name,
 		   peerAddress,
 		   rib,
@@ -29,7 +29,7 @@ public class BGPPeer {
 	 * Construct BGP Peer for a AS and with a given speaker
 	 * @param speaker
 	 */
-	public BGPPeer(BGPSpeaker speaker, AutNum asn) {
+	public BGPPeerDeprecated(BGPSpeakerDeprecated speaker, AutNum asn) {
 		this.speaker = speaker;
 		
 		this.name = String.format("AS%s-in-%s", asn.getValue(), speaker.name);

@@ -14,20 +14,20 @@ import java.util.Set;
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 
-import comp3500.abn.emitters.odlconfig.BGPPeer;
-import comp3500.abn.emitters.odlconfig.BGPSpeaker;
+import comp3500.abn.emitters.odlconfig.BGPPeerDeprecated;
+import comp3500.abn.emitters.odlconfig.BGPSpeakerDeprecated;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 
 /**
  * Creates and emits an OpenDaylight BGP configuration file.
  * @author Benjamin George Roberts
  */
-public class ODLConfigEmitter implements OutputEmitter {
+public class ODLConfigEmitterDeprecated implements OutputEmitter {
 	private static final String TEMPLATE_RESOURCE = "mustache/ODLConfigEmitter.mustache"; 
 	
 	
-	Set<BGPSpeaker> bgpServers = new HashSet<BGPSpeaker>();
-	Set<BGPPeer> 	 bgpPeers 	= new HashSet<BGPPeer>();
+	Set<BGPSpeakerDeprecated> bgpServers = new HashSet<BGPSpeakerDeprecated>();
+	Set<BGPPeerDeprecated> 	 bgpPeers 	= new HashSet<BGPPeerDeprecated>();
 	
 	/*
 	 * BGP config file constants. 
@@ -78,7 +78,7 @@ public class ODLConfigEmitter implements OutputEmitter {
 	}
 	
 	/**
-	 * Parse the RPSLObject stream by creating {@link BGPSpeaker}s from AUT_NUM {@link RpslObject}s,
+	 * Parse the RPSLObject stream by creating {@link BGPSpeakerDeprecated}s from AUT_NUM {@link RpslObject}s,
 	 * and getting the set of their peers.
 	 * @param objects {@link RpslObject}s to parse
 	 */
@@ -86,7 +86,7 @@ public class ODLConfigEmitter implements OutputEmitter {
 		for(RpslObject object: objects) {
 			switch(object.getType()) {
 				case AUT_NUM:
-					BGPSpeaker speaker = new BGPSpeaker(object);
+					BGPSpeakerDeprecated speaker = new BGPSpeakerDeprecated(object);
 					bgpServers.add(speaker);
 					bgpPeers.addAll(speaker.getPeers());
 					break;

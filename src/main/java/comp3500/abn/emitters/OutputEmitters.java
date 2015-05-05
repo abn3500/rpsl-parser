@@ -17,7 +17,7 @@ import java.util.Set;
 public enum OutputEmitters {
 	NULL(NullEmitter.class),
 	XML(XMLEmitter.class),
-	ODLCONFIG(ODLConfigEmitter.class),
+	ODLCONFIG(ODLConfigEmitterDeprecated.class),
 	;
 
 	private Class<OutputEmitter> emitterClass;

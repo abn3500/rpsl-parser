@@ -28,7 +28,7 @@ import comp3500.abn.rpsl.AttributeLexerWrapper;
  * Represents the speakers of the OpenDaylight configuration file.
  * @author Benjamin George Roberts
  */
-public class BGPSpeaker {
+public class BGPSpeakerDeprecated {
 	//List of route attribtue types parsed
 	private static final AttributeType[] ROUTE_TYPES = {AttributeType.IMPORT, AttributeType.EXPORT, AttributeType.DEFAULT};
 	
@@ -43,13 +43,13 @@ public class BGPSpeaker {
 	
 	
 	private RpslObject autnumObject = null;
-	private Map<AutNum, BGPPeer> bgpPeers = null;
+	private Map<AutNum, BGPPeerDeprecated> bgpPeers = null;
 	
 	/**
-	 * Create a new {@link BGPSpeaker} object. Initialises the template fields.
+	 * Create a new {@link BGPSpeakerDeprecated} object. Initialises the template fields.
 	 * @param object an AUT_NUM {@link RpslObject}
 	 */
-	public BGPSpeaker(RpslObject object) {
+	public BGPSpeakerDeprecated(RpslObject object) {
 		//Sanity check the object type
 		if(object.getType() != ObjectType.AUT_NUM)
 			throw new IllegalArgumentException("Tried to instantiate BGPServer with " + object.getType().getName().toString());
@@ -64,12 +64,12 @@ public class BGPSpeaker {
 	
 	/**
 	 * Using the {@link RpslObject} the speaker was initialised with, this method will create the required
-	 * {@link BGPPeer} instances. This is done by extracting the ASN's from each Import, Export or Default 
-	 * attribute, creating or retrieving the {@link BGPPeer} and passing the attribute (with routing information)
-	 * to the {@link BGPPeer}. If the table of {@link BGPPeer}s has already been built, the method will return it.
+	 * {@link BGPPeerDeprecated} instances. This is done by extracting the ASN's from each Import, Export or Default 
+	 * attribute, creating or retrieving the {@link BGPPeerDeprecated} and passing the attribute (with routing information)
+	 * to the {@link BGPPeerDeprecated}. If the table of {@link BGPPeerDeprecated}s has already been built, the method will return it.
 	 * @return The BGPPeers associated with this speaker
 	 */
-	public Collection<BGPPeer> getPeers() {	
+	public Collection<BGPPeerDeprecated> getPeers() {	
 		//TODO Doesn't take IP addresses into account
 		//TODO Doesn't pass actions to the BGPPeers
 		
@@ -77,7 +77,7 @@ public class BGPSpeaker {
 		if(bgpPeers != null)
 			return bgpPeers.values();
 		else
-			bgpPeers = new HashMap<AutNum, BGPPeer>();
+			bgpPeers = new HashMap<AutNum, BGPPeerDeprecated>();
 		
 		//Run for each of the attribute types
 		for(AttributeType attrType : ROUTE_TYPES) {
@@ -93,7 +93,7 @@ public class BGPSpeaker {
 			
 			//Find attributes of current route type
 			for(RpslAttribute attr : autnumObject.findAttributes(attrType)) {
-				List<BGPPeer> currentRoutePeers = new LinkedList<BGPPeer>();
+				List<BGPPeerDeprecated> currentRoutePeers = new LinkedList<BGPPeerDeprecated>();
 				List<Pair<String, List<String>>> parsedAttribute;
 				
 				//Parse the current attribute
@@ -116,7 +116,7 @@ public class BGPSpeaker {
 						AutNum asn = AutNum.parse(tokenPair.getRight().get(0));
 						
 						if(!bgpPeers.containsKey(asn))
-							bgpPeers.put(asn, new BGPPeer(this, asn));
+							bgpPeers.put(asn, new BGPPeerDeprecated(this, asn));
 						currentRoutePeers.add(bgpPeers.get(asn));
 						
 					} catch (AttributeParseException e) {
@@ -126,7 +126,7 @@ public class BGPSpeaker {
 				}
 				
 				//Add the route attribute to the peers
-				for(BGPPeer peer : currentRoutePeers)
+				for(BGPPeerDeprecated peer : currentRoutePeers)
 					peer.addRoutes(parsedAttribute, attrType);
 			}
 		}
