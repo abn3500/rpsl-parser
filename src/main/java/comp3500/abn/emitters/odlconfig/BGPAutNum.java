@@ -45,7 +45,7 @@ public class BGPAutNum {
 	 */
 	public BGPAutNum(RpslObject object) {
 		//Sanity check the provided object
-		assert(object.getType() == ObjectType.AUT_NUM);
+		if(object.getType() != ObjectType.AUT_NUM) throw new IllegalArgumentException("Requires AUT_NUM object, got " + object.getType());
 		rpslObject = object;
 		
 		//This parse method can throw an error. We can't really recover so we won't catch it
@@ -94,7 +94,7 @@ public class BGPAutNum {
 	 */
 	static Set<Pair<Pair<String, String>, String>> getExportPeers(RpslAttribute attr) {
 		//Sanity check parameter
-		assert(attr.getType() == AttributeType.EXPORT);
+		if(attr.getType() != AttributeType.EXPORT) throw new IllegalArgumentException("Requires EXPORT attribtue, got " + attr.getType());
 		Set<Pair<Pair<String, String>, String>> exportPeers = new HashSet<Pair<Pair<String, String>, String>>();
 		List<Pair<String, List<String>>> attrAST = AttributeLexerWrapper.parse(attr);
 		

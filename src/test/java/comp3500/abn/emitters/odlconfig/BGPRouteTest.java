@@ -44,7 +44,36 @@ public class BGPRouteTest {
 		assertTrue(message, routeSet.contains(new BGPRoute(routeTwoRange, "1.1.1.2")));
 	}
 	
+	@Test(expected=IllegalArgumentException.class)
+	public void checkConstructorTypeAssertion() {
+		BGPRoute.resolveRoutes(new RpslAttribute(AttributeType.DEFAULT, "default: to AS1"), "1.1.1.1");
+	}
 	
+	@Test
+	public void failOnFilterExpression() {
+		String  andNotFilter = "export to AS1 announce ASSET AND NOT 1.1.2.0/24",
+				orFilter 	 = "export to AS1 announce ASSET OR 1.1.2.0/24";
+		assertTrue("Filter expressions are not supported, they should return no routes",
+					BGPRoute.resolveRoutes(new RpslAttribute(AttributeType.EXPORT, andNotFilter), "1.1.1.1").size() == 0);
+		assertTrue("Filter expressions are not supported, they should return no routes",
+				BGPRoute.resolveRoutes(new RpslAttribute(AttributeType.EXPORT, orFilter), "1.1.1.1").size() == 0);
+		
+	}
 	
+	@Test
+	public void testEquality() {
+		Object o = new Object();
+		BGPRoute route = new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), "1.1.1.1"),
+				 routeMatch = new BGPRoute(AddressPrefixRange.parse("1.1.1.1/24"), "1.1.1.1"),
+				 routeDifferentSubnet = new BGPRoute(AddressPrefixRange.parse("1.1.1.0/25"), "1.1.1.1"),
+				 routeDifferentNetwork = new BGPRoute(AddressPrefixRange.parse("1.1.2.0/24"), "1.1.1.1"),
+				 routeDifferentNextHop = new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), "1.1.1.2");
+		
+		assertEquals(route, routeMatch);
+		assertNotEquals(route, o);
+		assertNotEquals(route, routeDifferentSubnet);
+		assertNotEquals(route, routeDifferentNetwork);
+		assertNotEquals(route, routeDifferentNextHop);
+	}
 
 }

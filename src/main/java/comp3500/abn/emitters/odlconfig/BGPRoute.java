@@ -49,7 +49,7 @@ public class BGPRoute {
 	 */
 	static Set<BGPRoute> resolveRoutes(RpslAttribute exportAttr, String localRouter) {
 		//Sanity check on parameter
-		assert(exportAttr.getType() == AttributeType.EXPORT);
+		if(exportAttr.getType() != AttributeType.EXPORT) throw new IllegalArgumentException("Requires EXPORT attribute, got " + exportAttr.getType());
 		
 		//Create a set to store the created routes in, parse the attribute
 		Set<BGPRoute> routeObjectSet = new HashSet<BGPRoute>();

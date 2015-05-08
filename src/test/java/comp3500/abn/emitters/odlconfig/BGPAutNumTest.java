@@ -7,14 +7,12 @@ package comp3500.abn.emitters.odlconfig;
 
 import static org.junit.Assert.*;
 
-import java.util.List;
 import java.util.Set;
 
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
-import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
@@ -82,6 +80,25 @@ public class BGPAutNumTest {
 		assertTrue(String.format(message, peerThree, routeFour), bgpAutNum.includedRouteMap.containsEntry(peerThree, routeFour));
 		assertTrue(String.format(message, peerFour, routeOne), bgpAutNum.includedRouteMap.containsEntry(peerThree, routeOne));
 		assertTrue(String.format(message, peerFour, routeThree), bgpAutNum.includedRouteMap.containsEntry(peerThree, routeThree));
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void checkConstructorTypeAssertion() {
+		(new BGPAutNum(RpslObject.parse("route: 1.0.0.0/8\norigin: AS1"))).toString();
+	}
+	
+	@Test(expected=IllegalArgumentException.class)
+	public void checkExportAttributeTypeAssertion() {
+		BGPAutNum.getExportPeers(new RpslAttribute(AttributeType.DEFAULT, "default: to AS1"));
+	}
+	
+	@Test
+	public void checkToString() {
+		String autNumString = 
+				"aut-num:  AS1\n"
+				+ "as-name:  AARNET-NT-RNO\n";
+		BGPAutNum autNum = new BGPAutNum(RpslObject.parse(autNumString));
+		assertEquals("AARNET-NT-RNO (AS1)", autNum.toString());
 	}
 
 }
