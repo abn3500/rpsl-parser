@@ -23,7 +23,7 @@ public class App
 											+ "--list-emitters\n "
 											+ "-h/--help";
 	String outputPath = null;
-	RpslObjectStreamReader reader; //RpslObjectFileReader extends this, so is also covered here
+	RpslObjectStreamReader reader; //RpslObjectFileReader extends this class, so is also covered here
 	OutputWriter writer;
 	
 	OutputEmitter emitter;
@@ -75,7 +75,6 @@ public class App
 				System.exit(-1);
 			}
 		}
-    	
 	}
 
 	/**
@@ -159,7 +158,7 @@ public class App
      * Print an error message and terminate the application
      */
     private static void exitFlagError() {
-		System.err.println( "Unrecognised argument or flag was an even numbered param.\n" + USAGE_STRING);
+		System.err.println( "Unrecognised or duplicate argument, or flag was an *even* numbered param.\n" + USAGE_STRING);
 		System.exit(-1);
     }
     

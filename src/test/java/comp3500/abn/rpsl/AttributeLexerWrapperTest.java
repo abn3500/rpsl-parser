@@ -45,5 +45,25 @@ public class AttributeLexerWrapperTest {
 				"[(from,[AS2, 7.7.7.2]), (at,[7.7.7.1]), (action,[pref, =, 1]), (from,[AS2]), (action,[pref, =, 2]), (accept,[AS4])]",
 				AttributeLexerWrapper.parse(attr).toString());	
 	}
-
+	
+	@Test
+	public void noEmptyEntries() {
+		//Empty entries should be filtered. all maps originally have an empty entry for their key (ie import: ). check that it is missing
+		RpslAttribute attr = new RpslAttribute(AttributeType.IMPORT, importString);
+		List<Pair<String, List<String>>> ast = AttributeLexerWrapper.parse(attr);
+		for(Pair<String, List<String>> entry : ast) {
+			if(entry.getRight() == null || entry.getRight().size() == 0)
+				fail("Empty entry found in parser output: " + entry.getLeft());
+		}
+	}
+	
+	@Test
+	public void capturesOpeningToken() {
+		//Make sure that attributes with opening token are captured. used ifaddr as test
+		RpslAttribute attr = new RpslAttribute(AttributeType.IFADDR, "ifaddr:   193.0.0.158   masklen 27");
+		List<Pair<String, List<String>>> ast = AttributeLexerWrapper.parse(attr);
+		assertEquals("Key of first entry should be state name", "dns", ast.get(0).getLeft());
+		assertEquals("First entry should be captured when token", "193.0.0.158", ast.get(0).getRight().get(0));
+		assertTrue("Opening with token doesn't inadvertently capture rest of attribute", ast.get(0).getRight().size() == 1);
+	}
 }
