@@ -27,6 +27,7 @@ import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
  */
 public class BGPRoute {
 	private static final List<String> OPERATORS = Arrays.asList("AND", "OR", "NOT");
+	protected static final String ANY_ADDRESS = "0.0.0.0";
 	
 	AddressPrefixRange routePrefixObject;
 	String 	nextHop,

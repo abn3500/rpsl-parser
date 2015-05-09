@@ -98,7 +98,7 @@ public class BGPAutNumTest {
 				"aut-num:  AS1\n"
 				+ "as-name:  AARNET-NT-RNO\n";
 		BGPAutNum autNum = new BGPAutNum(RpslObject.parse(autNumString));
-		assertEquals("AARNET-NT-RNO (AS1)", autNum.toString());
+		assertTrue("AARNET-NT-RNO (AS1)".equals(autNum.toString()));
 	}
 
 }

@@ -30,14 +30,14 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 public class BGPAutNum {
 	private RpslObject rpslObject;
 	private AutNum autNumObject;
-	private String autNum,
+	protected String autNum,
 				   name;
 	
 	/**
 	 * Maps of (AS-Peer, IP) -> [Routes].
 	 * Used to store the list of routes included for export to BGP peers
 	 */
-	Multimap<Pair<String, String>, BGPRoute> includedRouteMap;
+	protected Multimap<Pair<String, String>, BGPRoute> includedRouteMap;
 	
 	/**
 	 * Initialise a new BGPAutNum instance and generate its route maps
@@ -63,9 +63,7 @@ public class BGPAutNum {
 	 * Generate the peer route maps by parsing the AutNum RPSL object's export attributes.
 	 */
 	private void generateRouteMaps() {
-		Multimap<Pair<String, String>, BGPRoute> includedRouteMap = LinkedHashMultimap.create(),
-												 excludedRouteMap = LinkedHashMultimap.create();
-		
+		Multimap<Pair<String, String>, BGPRoute> includedRouteMap = LinkedHashMultimap.create();		
 		for(RpslAttribute attr : rpslObject.getAttributes()) {
 			//Skip non export attributes
 			//TODO do we need to include EXPORT_VIA?
@@ -144,6 +142,25 @@ public class BGPAutNum {
 			}
 		}
 		return exportPeers;	
+	}
+	
+	/**
+	 * Query the AutNum object to retrieve it's export routing table for a peer.
+	 * @param peerAutNum AS of the peer to be retrieved (eg. "AS1")
+	 * @param peerAddress Address of the peer to be retrieved (eg. "1.1.1.1")
+	 * @return table of routes exported to peer
+	 */
+	public BGPRouteTable getTableForPeer(String peerAutNum, String peerAddress) {
+		return new BGPRouteTable(peerAutNum, peerAddress, this);
+	}
+	
+	/**
+	 * Query the AutNUm object to retrieve it's export routing table for all peers in an AS
+	 * @param peerAutNum AS to be retrieved (eg. "AS1")
+	 * @return table of routes exported to all peers in provided AS
+	 */
+	public BGPRouteTable getTableForAS(String peerAutNum) {
+		return new BGPRouteTable(peerAutNum, this);
 	}
 	
 	@Override
