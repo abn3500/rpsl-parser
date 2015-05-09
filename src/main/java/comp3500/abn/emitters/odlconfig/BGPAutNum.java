@@ -155,12 +155,27 @@ public class BGPAutNum {
 	}
 	
 	/**
-	 * Query the AutNUm object to retrieve it's export routing table for all peers in an AS
+	 * Query the AutNum object to retrieve it's export routing table for all peers in an AS
 	 * @param peerAutNum AS to be retrieved (eg. "AS1")
 	 * @return table of routes exported to all peers in provided AS
 	 */
 	public BGPRouteTable getTableForAS(String peerAutNum) {
 		return new BGPRouteTable(peerAutNum, this);
+	}
+	
+	/**
+	 * Query the AutNum object to find which AS a particular peer address is from.
+	 * This is accomplished by searching for the first route table matching the address.
+	 * @param peerAddress peer to search for
+	 * @return AS of peer (AS1) or null
+	 */
+	public String getASOfPeer(String peerAddress) {
+		//Iterate through entries to find first with matching IP address
+		for(Pair<String, String> peerEntry : includedRouteMap.keySet()) {
+			if(peerEntry.getRight().equals(peerAddress))
+				return peerEntry.getLeft();
+		}
+		return null;
 	}
 	
 	@Override

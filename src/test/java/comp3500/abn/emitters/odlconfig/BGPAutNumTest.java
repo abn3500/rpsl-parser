@@ -100,5 +100,16 @@ public class BGPAutNumTest {
 		BGPAutNum autNum = new BGPAutNum(RpslObject.parse(autNumString));
 		assertTrue("AARNET-NT-RNO (AS1)".equals(autNum.toString()));
 	}
+	
+	@Test
+	public void checkGetAsOfPeer() {
+		BGPAutNum autNum = new BGPAutNum(RpslObject.parse( 
+				"aut-num: AS1\n"
+				+ "as-name: TEST-AS\n"
+				+ "export: to AS2 1.1.1.1 at 1.1.1.1 announce 1.1.1.0/24"));
+		
+		assertEquals("Should return AS of requested peer", "AS2", autNum.getASOfPeer("1.1.1.1"));
+		assertTrue("Should return null for non-existant peer", autNum.getASOfPeer("1.2.3.4") == null);
+	}
 
 }

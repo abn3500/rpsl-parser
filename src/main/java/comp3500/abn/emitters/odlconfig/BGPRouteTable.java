@@ -7,6 +7,7 @@ package comp3500.abn.emitters.odlconfig;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
@@ -19,7 +20,7 @@ import org.apache.commons.lang3.tuple.Pair;
  * BGPRouteTable represents the a table taht can be exported to an ODL configuration
  * @author Benjamin George Roberts
  */
-public class BGPRouteTable {
+public class BGPRouteTable implements Iterable<BGPRoute> {
 	String peerAddress, peerAutNum, speakerName, tableName;
 	Set<BGPRoute> routeSet;
 	
@@ -90,6 +91,11 @@ public class BGPRouteTable {
 	@Override
 	public String toString() {
 		return tableName;
+	}
+
+	@Override
+	public Iterator<BGPRoute> iterator() {
+		return routeSet.iterator();
 	}
 	
 	
