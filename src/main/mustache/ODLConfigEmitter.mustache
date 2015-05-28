@@ -19,8 +19,23 @@
   <configuration>
     <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
       <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
-      <!-- Insert template logic here -->
       
+       <!-- Reconnect strategy configuration. -->
+       {{#reconnectStrategy}}
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
+          <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
+          <min-sleep>{{BGP_RECONNECT_SLEEP_MIN}}</min-sleep>
+          <max-sleep>{{BGP_RECONNECT_SLEEP_MAX}}</max-sleep>
+          <sleep-factor>{{BGP_RECONNCET_SLEEP_FACTOR}}</sleep-factor>
+          <connect-time>{{BGP_RECONNCET_CONNECT_TIME}}</connect-time>
+          <executor>
+            <type xmlns:netty="urn:opendaylight:params:xml:ns:yang:controller:netty">netty:netty-event-executor</type>
+            <name>global-event-executor</name> <!-- Defined in 31-bgp.xml -->
+          </executor>
+        </module>
+        {{/reconnectStrategy}}
+        
       </modules>
     </data>
   </configuration>

@@ -16,7 +16,7 @@ import java.util.Map;
 public enum OutputEmitters {
 	NULL(NullEmitter.class),
 	XML(XMLEmitter.class),
-	ODLCONFIG(ODLConfigEmitterDeprecated.class),
+	ODLCONFIG(ODLConfigEmitter.class),
 	;
 
 	private Class<OutputEmitter> emitterClass;
