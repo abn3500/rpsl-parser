@@ -106,6 +106,14 @@ public class BGPInetRtr {
 		}
 		return speakerSet;
 	}
+	
+	/**
+	 * Get a copy of the objects peer set
+	 * @return Set of objects {@link BGPPeer}s
+	 */
+	public Set<BGPPeer> getPeers() {
+		return new HashSet<BGPPeer>(peers);
+	}
 
 	@Override
 	public String toString() {
