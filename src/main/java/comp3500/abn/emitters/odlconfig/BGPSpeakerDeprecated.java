@@ -31,12 +31,12 @@ import comp3500.abn.rpsl.AttributeLexerWrapper;
 public class BGPSpeakerDeprecated {
 	//List of route attribtue types parsed
 	private static final AttributeType[] ROUTE_TYPES = {AttributeType.IMPORT, AttributeType.EXPORT, AttributeType.DEFAULT};
-	
+	private static final String DEFAULT_SPEAKER_ADDRESS = "0.0.0.0";
 	/*
 	 * Template values
 	 */
 	String 	name,
-			speakerAddress,
+			speakerAddress = DEFAULT_SPEAKER_ADDRESS, //By default, bi
 			peerRegistry,
 			asn;
 	AutNum	serverASN = null;
@@ -106,6 +106,13 @@ public class BGPSpeakerDeprecated {
 				
 				//Look for peer entries, these follow from (import) or to
 				for(Pair<String, List<String>> tokenPair : parsedAttribute) {
+					
+					//Check for tokens containing the speaker address
+					if(tokenPair.getLeft().equals("at")) {
+						addSpeakerAddress(tokenPair.getRight());
+						continue;
+					}
+					
 					//Skip tokens which don't have peers in them
 					if(!tokenPair.getLeft().equals((attrType == AttributeType.IMPORT) ? "from" : "to")
 						|| tokenPair.getRight().size() < 1) 
@@ -133,5 +140,28 @@ public class BGPSpeakerDeprecated {
 		
 		//Return the list of peers
 		return bgpPeers.values();
+	}
+
+	/**
+	 * Attempts to set the address of the {@link BGPSpeaker}. Currently, the address can only 
+	 * be changed once from DEFAULT_SPEAKER_ADDRESS; other changes are ignored and report warnings.
+	 * @param addressList
+	 */
+	private void addSpeakerAddress(List<String> addressList) {
+		//TODO doesnt handle multiple addresses for the same speaker
+		if(addressList.size() < 1) {
+			return;
+		} else {
+			if(addressList.size() > 1)
+				System.err.println("Warning: Multiple speaker addresses in same attribute are not supported.");
+			
+			//Check if we are setting a 2nd, non default address
+			if(!(addressList.get(0).equals(speakerAddress) || speakerAddress.equals(DEFAULT_SPEAKER_ADDRESS)))
+				System.err.println("Warning: Speakers with multiple addresses are not supported");
+			else
+				speakerAddress = addressList.get(0);
+			
+		}
+		
 	}
 }
