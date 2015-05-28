@@ -30,9 +30,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
-import comp3500.abn.rpsl.AttributeLexerWrapper;
 import difflib.StringUtills;
 import net.ripe.db.whois.common.domain.CIString;
+import net.ripe.db.whois.common.rpsl.AttributeLexerWrapper;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 

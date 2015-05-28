@@ -13,7 +13,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import comp3500.abn.rpsl.AttributeLexerWrapper;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
@@ -54,7 +53,7 @@ public class BGPRoute {
 		
 		//Create a set to store the created routes in, parse the attribute
 		Set<BGPRoute> routeObjectSet = new HashSet<BGPRoute>();
-		List<Pair<String, List<String>>> attrAST = AttributeLexerWrapper.parse(exportAttr);
+		List<Pair<String, List<String>>> attrAST = exportAttr.getTokenList();
 		
 		//Find the list of route strings
 		List<String> routeList = null;

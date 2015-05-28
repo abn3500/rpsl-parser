@@ -14,7 +14,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
 
-import comp3500.abn.rpsl.AttributeLexerWrapper;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
@@ -94,7 +93,7 @@ public class BGPAutNum {
 		//Sanity check parameter
 		if(attr.getType() != AttributeType.EXPORT) throw new IllegalArgumentException("Requires EXPORT attribtue, got " + attr.getType());
 		Set<Pair<Pair<String, String>, String>> exportPeers = new HashSet<Pair<Pair<String, String>, String>>();
-		List<Pair<String, List<String>>> attrAST = AttributeLexerWrapper.parse(attr);
+		List<Pair<String, List<String>>> attrAST = attr.getTokenList();
 		
 		//Iterate through peering specifications and add peers to set
 		for(int i = 0; i < attrAST.size(); i++) {

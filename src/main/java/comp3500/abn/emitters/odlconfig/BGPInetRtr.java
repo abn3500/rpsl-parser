@@ -11,7 +11,6 @@ import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import comp3500.abn.rpsl.AttributeLexerWrapper;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
@@ -61,7 +60,7 @@ public class BGPInetRtr {
 	private void addPeer(RpslAttribute peerAttribute) {
 		//TODO should handle peer attribetus such as asno and port
 		//Parse the attribute
-		List<Pair<String, List<String>>> peerAttrAst = AttributeLexerWrapper.parse(peerAttribute);
+		List<Pair<String, List<String>>> peerAttrAst = peerAttribute.getTokenList();
 		
 		//Find the peer IP address, should be in the form ("dns", "BGP4", "1.2.3.4")
 		for(Pair<String, List<String>> entry : peerAttrAst) {
@@ -93,7 +92,7 @@ public class BGPInetRtr {
 		
 		for(RpslAttribute ifAddrAttr : object.findAttributes(AttributeType.IFADDR)) {
 			//Parse the ifaddr attribute
-			List<Pair<String, List<String>>> attrAst = AttributeLexerWrapper.parse(ifAddrAttr);
+			List<Pair<String, List<String>>> attrAst = ifAddrAttr.getTokenList();
 			
 			//Find the IP of the ifaddr
 			for(Pair<String, List<String>> entry : attrAst) {

@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import net.ripe.db.whois.common.rpsl.AttributeLexerWrapper;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
@@ -22,7 +23,6 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 import org.apache.commons.lang3.tuple.Pair;
 
-import comp3500.abn.rpsl.AttributeLexerWrapper;
 
 /**
  * Represents the speakers of the OpenDaylight configuration file.
