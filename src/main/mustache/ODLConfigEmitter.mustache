@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- vi: set et smarttab sw=4 tabstop=4: -->
+<!-- vi: set et smarttab sw2 tabstop=2: -->
 <snapshot>
   <!-- This template is based on the example BGP speaker/peer configuration found at
   bgp/controller-config/src/main/resources/initial/41-bgp-example.xml of the BGPPCEP ODL module
@@ -36,7 +36,49 @@
         </module>
         {{/reconnectStrategy}}
         
+        <!--******************START OF SPEAKERS******************-->        
+        {{#speakerSet}}
+        <!-- Peer registry (module) of {{speakerName}} -->
+        <module>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:strict-bgp-peer-registry</type>
+            <name>{{peerRegistry}}</name>
+        </module>
+        
+        <!-- BGP speaker of {{speakerName}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-acceptor</type>
+          <name>{{speakerName}}</name>
+          <binding-address>{{speakerAddress}}</binding-address>
+          
+          <accepting-bgp-dispatcher>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-dispatcher</type>
+            <name>global-bgp-dispatcher</name> <!-- Defined in 31-bgp.xml -->
+          </accepting-bgp-dispatcher>
+          <accepting-peer-registry>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-registry</type>
+            <name>{{peerRegistry}}</name>
+          </accepting-peer-registry>
+        </module>
+        <!--*****************************************************-->
+        {{/speakerSet}}
+        <!--*******************END OF SPEAKERS*******************-->
+        
       </modules>
+      <services xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+        <service>
+    	  <type xmlns:bgpspi="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">bgpspi:bgp-peer-registry</type>
+          <!--******************START OF SPEAKERS******************-->    
+          {{#speakerSet}}
+    	  <!-- Peer registry (service) of {{speakerName}} -->    
+          <instance>
+            <name>{{peerRegistry}}</name>
+            <provider>/modules/module[type='strict-bgp-peer-registry'][name='{{peerRegistry}}']</provider>
+          </instance>
+          <!--*****************************************************-->
+          {{/speakerSet}}
+          <!--*******************END OF SPEAKERS*******************-->        
+        </service>
+      </services>
     </data>
   </configuration>
 </snapshot>
