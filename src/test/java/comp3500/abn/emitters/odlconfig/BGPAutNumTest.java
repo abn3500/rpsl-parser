@@ -22,19 +22,19 @@ public class BGPAutNumTest {
 	@Test
 	public void getExportPeers() {
 		String exportPeerString = 
-				"export: 	to AS1\n at 3.3.3.3" +
+				"export: 	to AS1 at 3.3.3.3" +
 				"			to AS2 1.1.1.1 2.2.2.2 at 3.3.3.3\n" +
 				"			announce AS3",
 				trueMessage = "List should contain ((%s, %s), %s)",
 				falseMessage = "List should not contain ((%s, %s), %s)";
 		
 		RpslAttribute exportAttr = new RpslAttribute(AttributeType.EXPORT, exportPeerString);
-		Set<Pair<Pair<String, String>, String>> peerList = BGPAutNum.getExportPeers(exportAttr);		
-		
-		assertTrue(String.format(trueMessage, "AS1", "0.0.0.0", "3.3.3.3"), peerList.contains(Pair.of(Pair.of("AS1", "0.0.0.0"), "3.3.3.3")));
-		assertTrue(String.format(trueMessage, "AS2", "1.1.1.1", "3.3.3.3"), peerList.contains(Pair.of(Pair.of("AS2", "1.1.1.1"), "3.3.3.3")));
-		assertTrue(String.format(trueMessage, "AS2", "2.2.2.2", "3.3.3.3"), peerList.contains(Pair.of(Pair.of("AS2", "2.2.2.2"), "3.3.3.3")));
-		assertFalse(String.format(falseMessage, "AS2", "0.0.0.0", "3.3.3.3"), peerList.contains(Pair.of(Pair.of("AS2", "0.0.0.0"), "3.3.3.3")));
+		Set<Pair<Pair<Long, String>, String>> peerList = BGPAutNum.getExportPeers(exportAttr);		
+	
+		assertTrue(String.format(trueMessage, "1", "0.0.0.0", "3.3.3.3"), peerList.contains(Pair.of(Pair.of(1l, "0.0.0.0"), "3.3.3.3")));
+		assertTrue(String.format(trueMessage, "2", "1.1.1.1", "3.3.3.3"), peerList.contains(Pair.of(Pair.of(2l, "1.1.1.1"), "3.3.3.3")));
+		assertTrue(String.format(trueMessage, "2", "2.2.2.2", "3.3.3.3"), peerList.contains(Pair.of(Pair.of(2l, "2.2.2.2"), "3.3.3.3")));
+		assertFalse(String.format(falseMessage, "2", "0.0.0.0", "3.3.3.3"), peerList.contains(Pair.of(Pair.of(2l, "0.0.0.0"), "3.3.3.3")));
 	}
 	
 	@Test
@@ -45,7 +45,7 @@ public class BGPAutNumTest {
 			    "			announce AS3";
 		
 		RpslAttribute exportAttr = new RpslAttribute(AttributeType.EXPORT, exportPeerString);
-		Set<Pair<Pair<String, String>, String>> peerList = BGPAutNum.getExportPeers(exportAttr);
+		Set<Pair<Pair<Long, String>, String>> peerList = BGPAutNum.getExportPeers(exportAttr);
 		assertTrue("Export Peers should not add peers with missing local routers", peerList.size() == 0);
 	}
 	
@@ -68,10 +68,10 @@ public class BGPAutNumTest {
 				 routeTwo 	= new BGPRoute(AddressPrefixRange.parse("2.2.1.0/24") , "9.9.9.9"),
 				 routeThree = new BGPRoute(AddressPrefixRange.parse("2.2.2.0/23^+") , "8.8.8.8"),
 				 routeFour 	= new BGPRoute(AddressPrefixRange.parse("2.2.2.0/23^+") , "8.8.8.8");
-		Pair<String, String> peerOne 	= Pair.of("AS2", "1.1.1.1"),
-							 peerTwo 	= Pair.of("AS2", "1.1.1.2"),
-							 peerThree	= Pair.of("AS3", "1.1.1.3"),
-							 peerFour   = Pair.of("AS4", "0.0.0.0");
+		Pair<Long, String> peerOne 	= Pair.of(2l, "1.1.1.1"),
+							 peerTwo 	= Pair.of(2l, "1.1.1.2"),
+							 peerThree	= Pair.of(3l, "1.1.1.3"),
+							 peerFour   = Pair.of(4l, "0.0.0.0");
 		assertTrue(String.format(message, peerOne, routeOne), bgpAutNum.includedRouteMap.containsEntry(peerOne, routeOne));
 		assertTrue(String.format(message, peerOne, routeThree), bgpAutNum.includedRouteMap.containsEntry(peerOne, routeThree));
 		assertTrue(String.format(message, peerTwo, routeOne), bgpAutNum.includedRouteMap.containsEntry(peerTwo, routeOne));
@@ -108,8 +108,8 @@ public class BGPAutNumTest {
 				+ "as-name: TEST-AS\n"
 				+ "export: to AS2 1.1.1.1 at 1.1.1.1 announce 1.1.1.0/24"));
 		
-		assertEquals("Should return AS of requested peer", "AS2", autNum.getASOfPeer("1.1.1.1"));
-		assertTrue("Should return null for non-existant peer", autNum.getASOfPeer("1.2.3.4") == null);
+		assertEquals("Should return AS of requested peer", 2, autNum.getASOfPeer("1.1.1.1"));
+		assertTrue("Should return null for non-existant peer", autNum.getASOfPeer("1.2.3.4") == -1);
 	}
 
 }

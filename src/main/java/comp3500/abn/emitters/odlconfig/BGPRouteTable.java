@@ -21,7 +21,8 @@ import org.apache.commons.lang3.tuple.Pair;
  * @author Benjamin George Roberts
  */
 public class BGPRouteTable implements Iterable<BGPRoute> {
-	String peerAddress, peerAutNum, speakerName, tableName;
+	String peerAddress, speakerName, tableName;
+	long peerAutNum;
 	Set<BGPRoute> routeSet;
 	
 	/**
@@ -32,14 +33,11 @@ public class BGPRouteTable implements Iterable<BGPRoute> {
 	 * @param routeSet Routes to populate table with
 	 * @throws AttributeParseException
 	 */
-	public BGPRouteTable(String peerAutNum, String peerAddress,
+	public BGPRouteTable(long peerAutNum, String peerAddress,
 			String speakerName, Collection<BGPRoute> routeSet) {
 		//Sanity check arguments, will throw AttributeParseException on bad arguments
-		try {
-			AutNum.parse(peerAutNum);
-		} catch (AttributeParseException e) {
+		if(peerAutNum <= 0)
 			throw new IllegalArgumentException("Illegal peer ASN: " + peerAutNum);
-		}
 		try {
 			IPAddress.parse(peerAddress);
 		} catch (AttributeParseException e)
@@ -55,9 +53,9 @@ public class BGPRouteTable implements Iterable<BGPRoute> {
 		
 		//Assign table name, using "ANY" if the peer address is 0.0.0.0
 		if(peerAddress.equals(BGPRoute.ANY_ADDRESS)) {
-			this.tableName = String.format("%s(ANY)-in-%s", peerAutNum, speakerName);
+			this.tableName = String.format("AS%d(ANY)-in-%s", peerAutNum, speakerName);
 		} else {
-			this.tableName = String.format("%s(%s)-in-%s",peerAutNum, peerAddress, speakerName);
+			this.tableName = String.format("AS%d(%s)-in-%s",peerAutNum, peerAddress, speakerName);
 		}
 	}
 	
@@ -68,12 +66,12 @@ public class BGPRouteTable implements Iterable<BGPRoute> {
 	 * @param speakerAutNum AutNum object speaker originates from. Used to lookup route table
 	 * @throws AttributeParseException
 	 */
-	public BGPRouteTable(String peerAutNum, String peerAddress, BGPAutNum speakerAutNum) {
+	public BGPRouteTable(long peerAutNum, String peerAddress, BGPAutNum speakerAutNum) {
 		//Initialise with empty route set
 		this(peerAutNum, peerAddress, speakerAutNum.name, new HashSet<BGPRoute>());
 		
 		//Attempt to retrieve table from speakerAutNum
-		Pair<String, String> tableIdentifier = Pair.of(peerAutNum, peerAddress);
+		Pair<Long, String> tableIdentifier = Pair.of(peerAutNum, peerAddress);
 		if(speakerAutNum.includedRouteMap.containsKey(tableIdentifier)) 
 			this.routeSet = new HashSet<BGPRoute>(speakerAutNum.includedRouteMap.get(tableIdentifier));
 	}
@@ -84,7 +82,7 @@ public class BGPRouteTable implements Iterable<BGPRoute> {
 	 * @param speakerAutNum AutNum object speaker originates from. Used to lookup route table
 	 * @throws AttributeParseException
 	 */
-	public BGPRouteTable(String peerAutNum, BGPAutNum speakerAutNum) {
+	public BGPRouteTable(long peerAutNum, BGPAutNum speakerAutNum) {
 		this(peerAutNum, BGPRoute.ANY_ADDRESS, speakerAutNum);
 	}
 	

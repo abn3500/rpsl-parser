@@ -24,7 +24,8 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 public class BGPInetRtr {
 	private RpslObject inetRtr;
 	protected BGPAutNum autNumObject;
-	protected String speakerAddress, speakerAutNum, speakerName, peerRegistry;
+	protected String speakerAddress, speakerName, peerRegistry;
+	protected long speakerAutNum;
 	protected Set<BGPPeer> peers = new HashSet<BGPPeer>();
 	
 	/**
@@ -65,10 +66,10 @@ public class BGPInetRtr {
 		//Find the peer IP address, should be in the form ("dns", "BGP4", "1.2.3.4")
 		for(Pair<String, List<String>> entry : peerAttrAst) {
 			if(entry.getLeft().equals("dns") && entry.getRight().size() > 1) {
-				String  peerAddress = entry.getRight().get(1),
-					 	peerAS      = autNumObject.getASOfPeer(peerAddress);
+				String  peerAddress = entry.getRight().get(1);
+				long 	peerAS      = autNumObject.getASOfPeer(peerAddress);
 				//Check of peer has associated AS in the speaker AS
-				if(peerAS == null)
+				if(peerAS == -1)
 					continue;
 				
 				//Add new peer
@@ -125,7 +126,7 @@ public class BGPInetRtr {
 			return false;
 		
 		BGPInetRtr other = (BGPInetRtr) o;
-		return this.speakerAddress.equals(other.speakerAddress) && this.speakerAutNum.equals(other.speakerAutNum);
+		return this.speakerAddress.equals(other.speakerAddress) && this.speakerAutNum == other.speakerAutNum;
 	}
 	
 	@Override

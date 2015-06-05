@@ -38,25 +38,25 @@ public class BGPRouteTableTest {
 		routes.add(routeOne);
 		routes.add(routeTwo);
 		
-		BGPRouteTable table = new BGPRouteTable("AS1", "3.3.3.3", "TEST-AS", routes);
+		BGPRouteTable table = new BGPRouteTable(1, "3.3.3.3", "TEST-AS", routes);
 		
 		assertTrue("Table shoud contain routes passed in constructor", table.routeSet.contains(routeOne) && table.routeSet.contains(routeTwo));
 	}
 	
 	@Test(expected=IllegalArgumentException.class)
 	public void peerASSyntaxCheck() {
-		(new BGPRouteTable("NOTANAS", "1.1.1.1", "speakerName", new HashSet<BGPRoute>())).toString();
+		(new BGPRouteTable(-1, "1.1.1.1", "speakerName", new HashSet<BGPRoute>())).toString();
 	}
 	@Test(expected=IllegalArgumentException.class)
 	public void peerAddressSyntaxCheck() {
-		(new BGPRouteTable("AS1", "1.1.1.1.1.1.1", "speakerName", new HashSet<BGPRoute>())).toString();
+		(new BGPRouteTable(1, "1.1.1.1.1.1.1", "speakerName", new HashSet<BGPRoute>())).toString();
 	}
 	
 	@Test
 	public void bgpAutNumGetter() {
-		BGPRouteTable peerTable = autNum.getTableForPeer("AS2", "1.2.3.4"),
-					  asTable   = autNum.getTableForAS("AS2"),
-					  emptyPeerTable = autNum.getTableForPeer("AS2", "1.1.1.2");
+		BGPRouteTable peerTable = autNum.getTableForPeer(2, "1.2.3.4"),
+					  asTable   = autNum.getTableForAS(2),
+					  emptyPeerTable = autNum.getTableForPeer(2, "1.1.1.2");
 		BGPRoute 	   asRoute = new BGPRoute(AddressPrefixRange.parse("2.2.2.0/24"), "1.1.1.1"),
 					   peerRoute   = new BGPRoute(AddressPrefixRange.parse("2.2.3.0/24"), "1.1.1.1");
 		
@@ -67,8 +67,8 @@ public class BGPRouteTableTest {
 	
 	@Test
 	public void toStringTest() {
-		BGPRouteTable peerTable = autNum.getTableForPeer("AS2", "1.2.3.4"),
-					  asTable = autNum.getTableForAS("AS2");
+		BGPRouteTable peerTable = autNum.getTableForPeer(2, "1.2.3.4"),
+					  asTable = autNum.getTableForAS(2);
 		assertEquals("AS2(1.2.3.4)-in-TEST-AS", peerTable.toString());
 		assertEquals("AS2(ANY)-in-TEST-AS", asTable.toString());
 	}

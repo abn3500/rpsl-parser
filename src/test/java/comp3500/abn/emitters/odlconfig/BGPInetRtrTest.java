@@ -55,7 +55,7 @@ public class BGPInetRtrTest {
 	@Test
 	public void checkConstructorAddPeer() {
 		BGPInetRtr speaker = new BGPInetRtr(inetRtrObject, "1.1.1.1", autNum);
-		assertTrue("speaker should create declared BGP peer", speaker.peers.contains(new BGPPeer("AS2", "2.2.2.2", speaker)));
+		assertTrue("speaker should create declared BGP peer", speaker.peers.contains(new BGPPeer(2, "2.2.2.2", speaker)));
 	}
 
 }
