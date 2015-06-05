@@ -28,7 +28,7 @@
         {{#reconnectStrategy}}
         <module>
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
-          <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
+          <name>reconnect-strategy-factory</name>
           <min-sleep>{{BGP_RECONNECT_SLEEP_MIN}}</min-sleep>
           <max-sleep>{{BGP_RECONNECT_SLEEP_MAX}}</max-sleep>
           <sleep-factor>{{BGP_RECONNCET_SLEEP_FACTOR}}</sleep-factor>
@@ -76,7 +76,7 @@
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
           <instance>
             <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
-            <provider>/config/modules/module[name='timed-reconnect-strategy-factory']/instance[name='{{BGP_RECONNECT_STRATEGY_NAME}}']</provider>
+            <provider>/config/modules/module[name='timed-reconnect-strategy-factory']/instance[name='reconnect-strategy-factory']</provider>
           </instance>
         </service>
         {{/reconnectStrategy}}
