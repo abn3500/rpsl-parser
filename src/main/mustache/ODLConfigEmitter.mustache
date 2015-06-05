@@ -3,25 +3,29 @@
 <snapshot>
   <!-- This template is based on the example BGP speaker/peer configuration found at
   bgp/controller-config/src/main/resources/initial/41-bgp-example.xml of the BGPPCEP ODL module
-  
+
   It assumes the inclusion of the defaults defined in 31-bgp.xml of the same module -->
-  
+
+  <!-- Merged capability list from 31-bgp.xml and 41-bgp-example.xml -->
   <required-capabilities>
-    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg?module=config-bgp-rib&amp;revision=2013-07-01</capability>
-    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi?module=config-bgp-rib-spi&amp;revision=2013-11-15</capability>
-    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl?module=bgp-rib-impl&amp;revision=2013-04-09</capability>
-    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:topology:provider?module=config-bgp-topology-provider&amp;revision=2013-11-15</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg?module=odl-bgp-rib-cfg&amp;revision=2013-07-01</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi?module=odl-bgp-rib-spi-cfg&amp;revision=2013-11-15</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl?module=odl-bgp-rib-impl-cfg&amp;revision=2013-04-09</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:topology:provider?module=odl-bgp-topology-provider-cfg&amp;revision=2013-11-15</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv6?module=odl-bgp-treachability-ipv6-cfg&amp;revision=2013-11-15</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv4?module=odl-bgp-treachability-ipv4-cfg&amp;revision=2013-11-15</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:netty?module=netty&amp;revision=2013-11-19</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:protocol:framework?module=protocol-framework&amp;revision=2014-03-13</capability>
-    <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=config-topology-api&amp;revision=2013-11-15</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=odl-topology-api-cfg&amp;revision=2013-11-15</capability>
   </required-capabilities>
+
   <configuration>
     <data xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
       <modules xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
-      
-       <!-- Reconnect strategy configuration. -->
-       {{#reconnectStrategy}}
+
+        <!-- Reconnect strategy configuration. -->
+        {{#reconnectStrategy}}
         <module>
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
           <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
@@ -29,27 +33,28 @@
           <max-sleep>{{BGP_RECONNECT_SLEEP_MAX}}</max-sleep>
           <sleep-factor>{{BGP_RECONNCET_SLEEP_FACTOR}}</sleep-factor>
           <connect-time>{{BGP_RECONNCET_CONNECT_TIME}}</connect-time>
-          <executor>
+          <timed-reconnect-executor>
             <type xmlns:netty="urn:opendaylight:params:xml:ns:yang:controller:netty">netty:netty-event-executor</type>
             <name>global-event-executor</name> <!-- Defined in 31-bgp.xml -->
-          </executor>
+          </timed-reconnect-executor>
         </module>
         {{/reconnectStrategy}}
-        
-        <!--******************START OF SPEAKERS******************-->        
+
+        <!--******************START OF SPEAKERS******************-->
         {{#speakerSet}}
         <!-- Peer registry (module) of {{speakerName}} -->
         <module>
-            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:strict-bgp-peer-registry</type>
-            <name>{{peerRegistry}}</name>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:strict-bgp-peer-registry</type>
+          <name>{{peerRegistry}}</name>
         </module>
-        
+
         <!-- BGP speaker of {{speakerName}} -->
         <module>
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-acceptor</type>
           <name>{{speakerName}}</name>
           <binding-address>{{speakerAddress}}</binding-address>
-          
+          <binding-port>179</binding-port> <!-- TODO offer to configure this value -->
+
           <accepting-bgp-dispatcher>
             <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-dispatcher</type>
             <name>global-bgp-dispatcher</name> <!-- Defined in 31-bgp.xml -->
@@ -62,21 +67,32 @@
         <!--*****************************************************-->
         {{/speakerSet}}
         <!--*******************END OF SPEAKERS*******************-->
-        
+
       </modules>
       <services xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
+        <!-- Reconnect strategy configuration. -->
+        {{#reconnectStrategy}}
         <service>
-    	  <type xmlns:bgpspi="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">bgpspi:bgp-peer-registry</type>
-          <!--******************START OF SPEAKERS******************-->    
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
+          <instance>
+            <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
+            <provider>/config/modules/module[name='timed-reconnect-strategy-factory']/instance[name='{{BGP_RECONNECT_STRATEGY_NAME}}']</provider>
+          </instance>
+        </service>
+        {{/reconnectStrategy}}
+
+        <service>
+          <type xmlns:bgpspi="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">bgpspi:bgp-peer-registry</type>
+          <!--******************START OF SPEAKERS******************-->
           {{#speakerSet}}
-    	  <!-- Peer registry (service) of {{speakerName}} -->    
+          <!-- Peer registry (service) of {{speakerName}} -->
           <instance>
             <name>{{peerRegistry}}</name>
             <provider>/modules/module[type='strict-bgp-peer-registry'][name='{{peerRegistry}}']</provider>
           </instance>
           <!--*****************************************************-->
           {{/speakerSet}}
-          <!--*******************END OF SPEAKERS*******************-->        
+          <!--*******************END OF SPEAKERS*******************-->
         </service>
       </services>
     </data>
