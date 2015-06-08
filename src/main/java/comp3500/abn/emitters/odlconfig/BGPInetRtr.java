@@ -59,24 +59,37 @@ public class BGPInetRtr {
 	 * @param peerAttribute attribute of the inet-rtr declaring the peer to be added
 	 */
 	private void addPeer(RpslAttribute peerAttribute) {
-		//TODO should handle peer attribetus such as asno and port
+		//TODO should handle peer attributes such as asno and port
 		//Parse the attribute
 		List<Pair<String, List<String>>> peerAttrAst = peerAttribute.getTokenList();
 		
+		long peerAS_fromAttr = -1;
+		long peerAS_fromCache = -1;
+		String  peerAddress = null;
 		//Find the peer IP address, should be in the form ("dns", "BGP4", "1.2.3.4")
 		for(Pair<String, List<String>> entry : peerAttrAst) {
 			if(entry.getLeft().equals("dns") && entry.getRight().size() > 1) {
-				String  peerAddress = entry.getRight().get(1);
-				long 	peerAS      = autNumObject.getASOfPeer(peerAddress);
-				//Check of peer has associated AS in the speaker AS
-				if(peerAS == -1)
-					continue;
+				peerAddress		 = entry.getRight().get(1);
+				peerAS_fromCache = autNumObject.getASOfPeer(peerAddress); //retrieve the peer as based on existing known routes //TODO: that impression correct?
 				
-				//Add new peer
-				peers.add(new BGPPeer(peerAS, peerAddress, this));
+//				//Check if peer has associated AS in the speaker AS
+//				if(peerAS_fromCache == -1)
+//					continue;
+			}
+			//if an asno is provided, extract it
+			if(entry.getLeft().equals("asno") && entry.getRight().size() >0) {
+				String tempAS = entry.getRight().get(0);
+				if(tempAS.startsWith("AS")) //sanity check
+					peerAS_fromAttr = Long.parseLong(tempAS.substring(2, tempAS.length()-1));
 			}
 		}
-		
+		if(peerAddress==null)
+			//TODO: throw appropriate exception
+		if(peerAS_fromCache==-1 && peerAS_fromAttr==-1)
+			//TODO: Throw appropriate exception //no ASno available. Abort
+			
+		//Add new peer
+		peers.add(new BGPPeer((peerAS_fromAttr==-1 ? peerAS_fromCache : peerAS_fromAttr), peerAddress, this));
 	}
 
 	/**
