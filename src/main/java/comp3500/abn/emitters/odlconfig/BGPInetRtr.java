@@ -15,6 +15,8 @@ import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
 import net.ripe.db.whois.common.rpsl.RpslObject;
+import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
+import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 /**
  * Representation of an RPSL inet-rtr object and an ODL BGP Speaker.
@@ -63,29 +65,33 @@ public class BGPInetRtr {
 		//Parse the attribute
 		List<Pair<String, List<String>>> peerAttrAst = peerAttribute.getTokenList();
 		
-		long peerAS_fromAttr = -1;
-		long peerAS_fromCache = -1;
+		long peerAS = -1;
 		String  peerAddress = null;
 		//Find the peer IP address, should be in the form ("dns", "BGP4", "1.2.3.4")
 		for(Pair<String, List<String>> entry : peerAttrAst) {
 			if(entry.getLeft().equals("dns") && entry.getRight().size() > 1) {
 				peerAddress		 = entry.getRight().get(1);
-				peerAS_fromCache = autNumObject.getASOfPeer(peerAddress); //retrieve the peer as based on existing known routes //TODO: that impression correct?
-			}
-			//if an asno is provided, extract it
-			if(entry.getLeft().equals("asno") && entry.getRight().size() >0) {
-				String tempAS = entry.getRight().get(0);
-				if(tempAS.startsWith("AS")) //sanity check
-					peerAS_fromAttr = Long.parseLong(tempAS.substring(2, tempAS.length()-1));
+				peerAS = autNumObject.getASOfPeer(peerAddress);
+				break;
 			}
 		}
-		if(peerAddress==null)
-			return; //TODO: Log issue or throw exception
-		if(peerAS_fromCache==-1 && peerAS_fromAttr==-1) //no asno available: abort.
-			return; //TODO: Log issue or throw exception
-			
+		
+		//if an asno is provided, extract it
+		for(Pair<String, List<String>> entry : peerAttrAst) {
+			if(entry.getLeft().equals("asno") && entry.getRight().size() > 0) {
+				try {
+					AutNum asNo = AutNum.parse(entry.getRight().get(0));
+					peerAS = asNo.getValue();
+					break;
+				} catch(AttributeParseException e) {
+					//TODO: Log issue or throw exception
+				}
+			}
+		}
+		
 		//Add new peer
-		peers.add(new BGPPeer((peerAS_fromAttr==-1 ? peerAS_fromCache : peerAS_fromAttr), peerAddress, this));
+		if(peerAddress != null && peerAS != -1) 
+			peers.add(new BGPPeer(peerAS, peerAddress, this));			
 	}
 
 	/**
