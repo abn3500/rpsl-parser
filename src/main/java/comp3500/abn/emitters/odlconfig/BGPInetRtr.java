@@ -71,10 +71,6 @@ public class BGPInetRtr {
 			if(entry.getLeft().equals("dns") && entry.getRight().size() > 1) {
 				peerAddress		 = entry.getRight().get(1);
 				peerAS_fromCache = autNumObject.getASOfPeer(peerAddress); //retrieve the peer as based on existing known routes //TODO: that impression correct?
-				
-//				//Check if peer has associated AS in the speaker AS
-//				if(peerAS_fromCache == -1)
-//					continue;
 			}
 			//if an asno is provided, extract it
 			if(entry.getLeft().equals("asno") && entry.getRight().size() >0) {
@@ -84,9 +80,9 @@ public class BGPInetRtr {
 			}
 		}
 		if(peerAddress==null)
-			//TODO: throw appropriate exception
-		if(peerAS_fromCache==-1 && peerAS_fromAttr==-1)
-			//TODO: Throw appropriate exception //no ASno available. Abort
+			return; //TODO: Log issue or throw exception
+		if(peerAS_fromCache==-1 && peerAS_fromAttr==-1) //no asno available: abort.
+			return; //TODO: Log issue or throw exception
 			
 		//Add new peer
 		peers.add(new BGPPeer((peerAS_fromAttr==-1 ? peerAS_fromCache : peerAS_fromAttr), peerAddress, this));
