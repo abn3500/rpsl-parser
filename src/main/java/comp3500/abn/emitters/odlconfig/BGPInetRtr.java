@@ -76,7 +76,7 @@ public class BGPInetRtr {
 			if(entry.getLeft().equals("asno") && entry.getRight().size() >0) {
 				String tempAS = entry.getRight().get(0);
 				if(tempAS.startsWith("AS")) //sanity check
-					peerAS_fromAttr = Long.parseLong(tempAS.substring(2, tempAS.length()-1));
+					peerAS_fromAttr = Long.parseLong(tempAS.substring(2, tempAS.length()));
 			}
 		}
 		if(peerAddress==null)
