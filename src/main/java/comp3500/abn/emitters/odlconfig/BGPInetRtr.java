@@ -76,7 +76,7 @@ public class BGPInetRtr {
 			}
 		}
 		
-		//if an asno is provided, extract it
+		//if an asno is provided explicitly in the peer attribute, extract it and use that
 		for(Pair<String, List<String>> entry : peerAttrAst) {
 			if(entry.getLeft().equals("asno") && entry.getRight().size() > 0) {
 				try {
@@ -91,7 +91,8 @@ public class BGPInetRtr {
 		
 		//Add new peer
 		if(peerAddress != null && peerAS != -1) 
-			peers.add(new BGPPeer(peerAS, peerAddress, this));			
+			peers.add(new BGPPeer(peerAS, peerAddress, this));
+		//TODO: else log issue
 	}
 
 	/**
