@@ -68,6 +68,58 @@
         {{/speakerSet}}
         <!--*******************END OF SPEAKERS*******************-->
 
+        <!--*******************START OF PEERS********************-->
+        {{#peerSet}}
+        <!-- Peer of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer</type>
+          <name>{{name}}}</name>
+          <host>{{peerAddress}}</host>
+          <holdtimer>180</holdtimer>
+          <rib>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg">prefix:rib</type>
+            <name>{{name}}-rib</name>
+          </rib>
+          <peer-registry>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-registry</type>
+            <name>{{peerRegistry}}</name>
+          </peer-registry>
+          <!-- TODO missing table declerations -->
+        </module>
+
+        <!-- RIB of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:rib-impl</type>
+          <name>{{name}}-rib</name>
+          <rib-id>{{name}}-rib</rib-id>
+          <local-as>{{speaker.speakerAutNum}}</local-as>
+          <bgp-rib-id>{{speaker.speakerAddress}}</bgp-rib-id>
+          <!-- TODO missing table declerations -->
+          <extensions>
+            <type xmlns:ribspi="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi">ribspi:extensions</type>
+            <name>global-rib-extensions</name>
+          </extensions>
+          <bgp-dispatcher>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-dispatcher</type>
+            <name>global-bgp-dispatcher</name>
+          </bgp-dispatcher>
+          <data-provider>
+            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
+            <name>binding-data-broker</name> <!--TODO Used to be pingpong-binding-data-broker -->
+          </data-provider>
+          <session-reconnect-strategy>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
+            <name>reconnect-strategy-factory</name>
+          </session-reconnect-strategy>
+          <tcp-reconnect-strategy>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
+            <name>reconnect-strategy-factory</name>
+          </tcp-reconnect-strategy>
+        </module>
+        <!--*****************************************************-->
+        {{/peerSet}}
+        <!--********************END OF PEERS*********************-->
+
       </modules>
       <services xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
         <!-- Reconnect strategy configuration. -->
@@ -75,7 +127,7 @@
         <service>
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
           <instance>
-            <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
+            <name>reconnect-strategy-factory</name>
             <provider>/config/modules/module[name='timed-reconnect-strategy-factory']/instance[name='reconnect-strategy-factory']</provider>
           </instance>
         </service>
@@ -94,6 +146,25 @@
           {{/speakerSet}}
           <!--*******************END OF SPEAKERS*******************-->
         </service>
+        <!--*******************START OF PEERS********************-->
+        {{#peerSet}}
+        <service>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg">prefix:rib</type>
+          <instance>
+            <name>{{name}}-rib</name>
+            <provider>/config/modules/module[name='rib-impl']/instance[name='{{name}}-rib']</provider>
+          </instance>
+        </service>
+        <service>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:rib-instance</type>
+          <instance>
+            <name>{{name}}-rib</name>
+            <provider>/config/modules/module[name='rib-impl']/instance[name='{{name}}-rib']</provider>
+          </instance>
+        </service>
+        <!--*****************************************************-->
+        {{/peerSet}}
+        <!--********************END OF PEERS*********************-->
       </services>
     </data>
   </configuration>
