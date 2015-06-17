@@ -78,7 +78,7 @@ public class BGPInetRtrTest {
 	
 	@Test
 	public void checkPeerAsResolution() { //TODO: check over this, possibly extend it
-		BGPInetRtr speaker = new BGPInetRtr(inetRtrObject, "1.1.1.1", autNum); //test speaker.. How do we decide *which* interface address is used in this constructor? Plainly there could be multiple, as demonstrated above
+		BGPInetRtr speaker = new BGPInetRtr(inetRtrObject, "1.1.1.1", autNum); //test speaker.. //TODO: How do we decide *which* interface address is used in this constructor? Plainly there could be multiple, as demonstrated above
 		assertTrue("speaker should utilise peer attrs to determine peer asno if possible", speaker.peers.contains(new BGPPeer(4, "4.4.4.4", speaker))); //check asno4 was picked up
 		assertTrue("speaker should utilise known routes to determine peer asno if possible", speaker.peers.contains(new BGPPeer(2, "2.2.2.2", speaker))); //check asno2 was picked up from cache
 		assertTrue("speaker should tolerate multiple asno sources", speaker.peers.contains(new BGPPeer(3, "3.3.3.3", speaker)));
