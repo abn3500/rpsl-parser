@@ -73,9 +73,13 @@
         <!-- Peer of {{name}} -->
         <module>
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer</type>
-          <name>{{name}}}</name>
+          <name>{{name}}</name>
           <host>{{peerAddress}}</host>
           <holdtimer>180</holdtimer>
+          <advertized-table> <!-- Used as the route table for a peer/speaker relation -->
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-table-type</type>
+            <name>ipv4-unicast</name>
+          </advertized-table>
           <rib>
             <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg">prefix:rib</type>
             <name>{{name}}-rib</name>
@@ -84,7 +88,22 @@
             <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-registry</type>
             <name>{{peerRegistry}}</name>
           </peer-registry>
-          <!-- TODO missing table declerations -->
+        </module>
+
+        <!-- Application peer of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-application-peer</type>
+          <name>{{name}}-app-peer</name>
+          <application-rib-id>{{name}}-app-rib</application-rib-id>
+          <bgp-peer-id>{{speaker.speakerAddress}}</bgp-peer-id>
+          <target-rib>
+            <type xmlns:x="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:rib-instance</type>
+            <name>{{name}}-rib</name>
+          </target-rib>
+          <data-broker>
+            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
+            <name>binding-data-broker</name>
+          </data-broker>
         </module>
 
         <!-- RIB of {{name}} -->
@@ -94,7 +113,10 @@
           <rib-id>{{name}}-rib</rib-id>
           <local-as>{{speaker.speakerAutNum}}</local-as>
           <bgp-rib-id>{{speaker.speakerAddress}}</bgp-rib-id>
-          <!-- TODO missing table declerations -->
+          <local-table>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-table-type</type>
+            <name>ipv4-unicast</name> <!-- Used as the route table for a peer/speaker relation -->
+          </local-table>
           <extensions>
             <type xmlns:ribspi="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi">ribspi:extensions</type>
             <name>global-rib-extensions</name>
