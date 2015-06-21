@@ -61,7 +61,7 @@ public class BGPInetRtr {
 	 * @param peerAttribute attribute of the inet-rtr declaring the peer to be added
 	 */
 	private void addPeer(RpslAttribute peerAttribute) {
-		//TODO should handle peer attributes such as asno and port
+		//TODO should handle peer attributes such as asno and port. Update: asno now handled. Port isn't specified in rpsl, so isn't applicable. Flap_damp() should perhaps be considered
 		//Parse the attribute
 		List<Pair<String, List<String>>> peerAttrAst = peerAttribute.getTokenList();
 		
