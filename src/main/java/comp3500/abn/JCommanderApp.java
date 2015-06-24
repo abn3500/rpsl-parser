@@ -17,64 +17,61 @@ import com.beust.jcommander.ParameterException;
 import comp3500.abn.emitters.OutputEmitter;
 import comp3500.abn.emitters.OutputEmitters;
 
-public class JCommanderTest {
+public class JCommanderApp {
 
 	public final static String APP_NAME = "App";
 	
 	//CLI args
 	@Parameter (names = {"-e", "--emitter"}, description = "Emitter to use to format output")
-	private String emitterName = null;
+	protected String emitterName = null;
 	
 	@DynamicParameter (names = {"-m"}, description = "Emitter parameters")
-	private HashMap<String, String> emitterArguments = new HashMap<String, String>();
+	protected HashMap<String, String> emitterArguments = new HashMap<String, String>();
 	
 	@Parameter (names = {"-i", "--input"}, description = "[Input path (omit for stdin)]")
-	private String inputPath = null;
+	protected String inputPath = null;
 	
 	@Parameter (names = {"-o", "--output"}, description = "[Output path (omit for stdout)]")
-	private String outputPath = null;
+	protected String outputPath = null;
 	
 	//explanatory/help commands
 	@Parameter (names = {"-h", "--help"}, help = true, description = "Dispaly usage information")
-	private boolean helpMode = false;
+	protected boolean helpMode = false;
 	
 	@Parameter (names = {"--list-emitters"}, help = true, description = "List available emitters to format output with")
-	private boolean help_displayEmitters = false;
+	protected boolean help_displayEmitters = false;
 	
 	
-	OutputEmitter emitter;
-	RpslObjectStreamReader reader;
-	OutputWriter writer;
+	protected OutputEmitter emitter;
+	protected RpslObjectStreamReader reader;
+	protected OutputWriter writer;
+	
+	public final int SETUP_EXIT_USAGE = 1;
+	public final int SETUP_EXIT_EMITTER_LIST = 2;
+	public final int SETUP_EXIT_READY = 0;
+	public final int SETUP_EXIT_FAIL = -1;
 	
 	
-	private void setup(String args[]) {
+	protected static String usageString;
+	static {
+		StringBuilder builder = new StringBuilder();
+		new JCommander(new JCommanderApp()).usage(builder);
+		usageString = builder.toString();
+	}
+	
+	
+	protected boolean setup(String args[]) throws ParameterException { //changed to bool to enable easier testing.. yes, I know..
+
+		JCommander cliArgParser = new JCommander(this, args); //parse params
 		
-		//this feels weird.. instantiating yourself within a private, non-static method.. :/
-		//AppLauncher launcher = new AppLauncher(); //instantiate parameter bucket
-		//ok, that's better.. :P
-		
-		JCommander cliArgParser = null;
-		try {
-			cliArgParser = new JCommander(this, args); //parse params
-		} catch (ParameterException e) {
-			System.err.println("Error parsing parameter" + e.getMessage());
-		}
-		
-		if(cliArgParser==null) {
-			throw new RuntimeException("Cli argument parser failed to initialise");
-		}
-		
-		
-		//app logic core
-		
-		
-		//handle help flags..
-		
-		//slight hax to work around JCommander formatting :P
-		
+
+		//StringBuilder helpString = new StringBuilder();
 		if(helpMode) {
 			cliArgParser.setProgramName(APP_NAME);
-			cliArgParser.usage(); //print usage info //TODO: work out a way to stop the default values of the help commands showing up :P 
+			cliArgParser.usage(); //print usage info //TODO: work out a way to stop the default values of the help commands showing up :P
+
+//			cliArgParser.usage(helpString);
+//			helpString.toString();
 		}
 		
 		if(help_displayEmitters) {
@@ -83,10 +80,10 @@ public class JCommanderTest {
 		
 		//if either of the above triggered, halt.
 		if(helpMode || help_displayEmitters)
-			System.exit(0);
+			return false; //formerly System.exit(0);.. then testability happened
 		
+		//not in help mode, continue normal run
 		
-		//normal run
 		
 		//get emitter, initialise with arguments if they exist
 		if(emitterArguments.size() > 0) {
@@ -99,12 +96,13 @@ public class JCommanderTest {
 					(OutputEmitters.defaultEmitter.get());
 		}
 		
-		//initialise input
 		reader = (inputPath != null) ?
 				(new RpslObjectFileReader(inputPath)) :
 				(new RpslObjectStreamReader(System.in));
 
 		writer = new OutputWriter(emitter); //TODO: organise how to make this more extensible with relation to more elaborate output methods; eg ssh, restconf, etc. Not just file or stdout.
+		
+		return true; //setup succeeded and no help flags were passed. run() should be called next.. to continue this great work ;)
 	}
 	
 	public void run() {    	
@@ -149,10 +147,10 @@ public class JCommanderTest {
 		//String arguments[] = {"-i", "inputRPSL", "-o", "outputPath", "-e", "odlConfig", "-m", "a=1", "-m", "b=2"}; //dummy params
 		
 		//String arguments[] = {"--list-emitters"};
-		String arguments[] = {"-h"};
+		//String arguments[] = {"-h"};
 		//instantiate yourself here instead.. probably a better idea.. I feel like I'm looking at an instance nesting problem here.. o_O :P
-		JCommanderTest launcher = new JCommanderTest();
-		launcher.setup(arguments);
-		launcher.run();
+		JCommanderApp launcher = new JCommanderApp();
+		if(launcher.setup(args)) //if setup passes, and if we're required to do more than just display of usage info or emitter listing..
+			launcher.run();
 	}
 }
