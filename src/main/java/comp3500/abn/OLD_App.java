@@ -16,7 +16,7 @@ import net.ripe.db.whois.common.io.RpslObjectStreamReader;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 
 
-public class App 
+public class OLD_App 
 {
 	private static final String USAGE_STRING  = "Usage: \n"
 											+ "[-i/--input input path] [-o/--output output path] [-e/--emitter emitter] [[-t/--option key=value]] \n" 
@@ -32,7 +32,7 @@ public class App
 	 * Initialise an instance of the application.
 	 * @param args command line arguments to parse
 	 */
-	public App(String args[]) {
+	public OLD_App(String args[]) {
 		parseArguments(args);
 	}
 	
@@ -184,6 +184,6 @@ public class App
      */
 	public static void main(String[] args) {
     	//instantiate yourself and jump out of this static context..
-    	new App(args).run();
+    	new OLD_App(args).run();
     }
 }

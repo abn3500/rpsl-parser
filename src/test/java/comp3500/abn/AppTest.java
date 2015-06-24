@@ -1,42 +1,52 @@
 package comp3500.abn;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+
+import net.ripe.db.whois.common.io.RpslObjectFileReader;
 
 import org.junit.Test;
-import org.junit.internal.runners.statements.Fail;
 
-/**
- * Unit test for simple App.
- */
-public class AppTest //extends TestCase
-{
-	private static final int TIMEOUT_STEP_MS = 300; //ms increment to wait while process is running
-	private static final int TIMEOUT_MAX_MS = TIMEOUT_STEP_MS * 10; //max time MS to wait
-	final boolean passthroughOutput = false; //pipe through stdout and stderr from tested app
+import com.beust.jcommander.ParameterException;
+
+import comp3500.abn.emitters.NullEmitter;
+import comp3500.abn.emitters.ODLConfigEmitter;
+
+public class AppTest {
+
+	final String arg_helpShort[] = {"-h"};
+	final String arg_helpLong[] = {"--help"};
 	
-	Path tempDirPath, inputPath, outputPath;
-	String sampleArgsXML;
-	Runtime runTime;
-	private static final String EXEC_COMMAND = "java -cp " + System.getProperty("java.class.path") + " comp3500.abn.App ";
+	final String arg_inputShort_noval[] = {"-i"};
+	final String arg_inputShort[] = {"-i", "testPath"};
+	final String arg_inputLong[] = {"--input", "testPath"};
 	
-	/**
-	 * prepare for tests..
-	 * @throws IOException 
-	 */
-	public void setup() throws IOException //TODO: look at how to get junit to run this automatically before each test..
-	{
+	final String arg_outputShort_noval[] = {"-o"};
+	final String arg_outputShort[] = {"-o", "testPath"};
+	final String arg_outputLong[] = {"--output", "testPath"};
+	
+	final String arg_emitterShort_noval[] = {"-e"};
+	final String arg_emitterShort[] = {"-e", "ODL_Config"};
+	final String arg_emitterLong[] = {"--emitter"};
+	
+	Path tempDirPath, inputPath, outputPath, expectedODLConfig;
+	
+	public void setup() throws IOException {
 		tempDirPath = Files.createTempDirectory(null);
     	inputPath = Files.createTempFile(tempDirPath, "rpslSample", ".txt");
     	outputPath = Files.createTempFile(tempDirPath, "parseOutput", ".xml");
+    	
+    	expectedODLConfig = Files.createTempFile(tempDirPath, "expectedODLConfig", ".xml");
 
     	BufferedWriter sampleWriter = new BufferedWriter(new FileWriter(inputPath.toFile()));
     	sampleWriter.write("aut-num:        AS1\n" +
@@ -61,7 +71,7 @@ public class AppTest //extends TestCase
 			"changed:        noc@iix.net 20150420\n" +
 			"source:         TEST\n" +
 			"\n" +
-			"aut-num:        AS3" +
+			"aut-num:        AS3\n" +
 			"as-name:        Example-Speaker2\n" +
 			"descr:          Example speaker for client2\n" +
 			"import:         from AS1 accept ANY\n" +
@@ -74,111 +84,195 @@ public class AppTest //extends TestCase
 			);
     	sampleWriter.close();
     	
-    	sampleArgsXML = "-o " + outputPath.toString() + " -i " + inputPath.toString() + " -e " + "XMLEmitter";
-    	
-    	runTime = Runtime.getRuntime();
-
+    	BufferedWriter expectedODLWriter = new BufferedWriter(new FileWriter(expectedODLConfig.toFile()));
+    	expectedODLWriter.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + 
+    			"<!-- vi: set et smarttab sw2 tabstop=2: -->\n" + 
+    			"<snapshot>\n" + 
+    			"  <!-- This template is based on the example BGP speaker/peer configuration found at\n" + 
+    			"  bgp/controller-config/src/main/resources/initial/41-bgp-example.xml of the BGPPCEP ODL module\n" + 
+    			"\n" + 
+    			"  It assumes the inclusion of the defaults defined in 31-bgp.xml of the same module -->\n" + 
+    			"\n" + 
+    			"  <!-- Merged capability list from 31-bgp.xml and 41-bgp-example.xml -->\n" + 
+    			"  <required-capabilities>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg?module=odl-bgp-rib-cfg&amp;revision=2013-07-01</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi?module=odl-bgp-rib-spi-cfg&amp;revision=2013-11-15</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl?module=odl-bgp-rib-impl-cfg&amp;revision=2013-04-09</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:topology:provider?module=odl-bgp-topology-provider-cfg&amp;revision=2013-11-15</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv6?module=odl-bgp-treachability-ipv6-cfg&amp;revision=2013-11-15</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv4?module=odl-bgp-treachability-ipv4-cfg&amp;revision=2013-11-15</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:netty?module=netty&amp;revision=2013-11-19</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:protocol:framework?module=protocol-framework&amp;revision=2014-03-13</capability>\n" + 
+    			"    <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=odl-topology-api-cfg&amp;revision=2013-11-15</capability>\n" + 
+    			"  </required-capabilities>\n" + 
+    			"\n" + 
+    			"  <configuration>\n" + 
+    			"    <data xmlns=\"urn:ietf:params:xml:ns:netconf:base:1.0\">\n" + 
+    			"      <modules xmlns=\"urn:opendaylight:params:xml:ns:yang:controller:config\">\n" + 
+    			"\n" + 
+    			"        <!-- Reconnect strategy configuration. -->\n" + 
+    			"        <module>\n" + 
+    			"          <type xmlns:prefix=\"urn:opendaylight:params:xml:ns:yang:controller:protocol:framework\">prefix:timed-reconnect-strategy-factory</type>\n" + 
+    			"          <name>reconnect-strategy-factory</name>\n" + 
+    			"          <min-sleep>1000</min-sleep>\n" + 
+    			"          <max-sleep>180000</max-sleep>\n" + 
+    			"          <sleep-factor>2.0</sleep-factor>\n" + 
+    			"          <connect-time>5000</connect-time>\n" + 
+    			"          <timed-reconnect-executor>\n" + 
+    			"            <type xmlns:netty=\"urn:opendaylight:params:xml:ns:yang:controller:netty\">netty:netty-event-executor</type>\n" + 
+    			"            <name>global-event-executor</name> <!-- Defined in 31-bgp.xml -->\n" + 
+    			"          </timed-reconnect-executor>\n" + 
+    			"        </module>\n" + 
+    			"\n" + 
+    			"        <!--******************START OF SPEAKERS******************-->\n" + 
+    			"        <!--*******************END OF SPEAKERS*******************-->\n" + 
+    			"\n" + 
+    			"      </modules>\n" + 
+    			"      <services xmlns=\"urn:opendaylight:params:xml:ns:yang:controller:config\">\n" + 
+    			"        <!-- Reconnect strategy configuration. -->\n" + 
+    			"        <service>\n" + 
+    			"          <type xmlns:prefix=\"urn:opendaylight:params:xml:ns:yang:controller:protocol:framework\">prefix:reconnect-strategy-factory</type>\n" + 
+    			"          <instance>\n" + 
+    			"            <name>reconnect-strategy-factory</name>\n" + 
+    			"            <provider>/config/modules/module[name='timed-reconnect-strategy-factory']/instance[name='reconnect-strategy-factory']</provider>\n" + 
+    			"          </instance>\n" + 
+    			"        </service>\n" + 
+    			"\n" + 
+    			"        <service>\n" + 
+    			"          <type xmlns:bgpspi=\"urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl\">bgpspi:bgp-peer-registry</type>\n" + 
+    			"          <!--******************START OF SPEAKERS******************-->\n" + 
+    			"          <!--*******************END OF SPEAKERS*******************-->\n" + 
+    			"        </service>\n" + 
+    			"      </services>\n" + 
+    			"    </data>\n" + 
+    			"  </configuration>\n" + 
+    			"</snapshot>");
+    	expectedODLWriter.close();
 	}
-    
-
-    /**
-     * Checks that the application exits successfully when given valid arguments 
-     * @throws IOException 
-     */
-	@Test
-    public void argParseTest() throws IOException {
-		setup();
-		
-    	Process p = runTime.exec(EXEC_COMMAND + sampleArgsXML);
-    	System.out.println("INFO: running argParseTest()");
-    	int exitCode = processWait(p);
-    	assertTrue("Application should exit with code 0", exitCode == 0);
-    }
 	
-	/**
-	 * Test response to being passed invalid args
-	 * @throws IOException 
-	 * @throws InterruptedException 
-	 */
+	
 	@Test
-	public void badArgParseTest() throws IOException, InterruptedException, IllegalThreadStateException {
-		setup();
-		String badargs = "-o -e XMLEmitter nonexistentfilepath";
+	public void testHelpParams() {
+		App app;
+		boolean setupResult;
 		
-		Process p = runTime.exec(EXEC_COMMAND + badargs);
-		System.out.println("INFO: running badArgParseTest()");
-		int eCode = processWait(p);
-		if(eCode==0) { //if success return code given (for invalid input), fail
-			//System.out.println("INFO: exit code: " + eCode);
-			fail("App should exit with an error code on invalid arguments");
-		}
-		//assertTrue("App should exit with error code -1 on invalid arguments", p.exitValue()==-1);
+		app = new App();
+		setupResult = app.setup(arg_helpShort);
+		assertTrue("setup() should return false if not ready to run - ie, failed or help mode", setupResult==false);
+		assertTrue("Help mode should be enabled after parsing the -h flag", app.helpMode);
+		assertTrue("Help mode shouldn't initialise other parameters", app.emitter==null && app.reader==null && app.writer==null);
+		
+		app = new App();;
+		setupResult = app.setup(arg_helpLong);
+		assertTrue("setup() should return false if not ready to run - ie, failed or help mode", setupResult==false);
+		assertTrue("Help mode should be enabled after parsing the --help flag", app.helpMode);
+		assertTrue("Help mode shouldn't initialise other parameters", app.emitter==null && app.reader==null && app.writer==null);
 	}
 	
-	/**
-	 * Waits for the provided process to terminate or, if it fails to terminate within TIMEOUT_MAX_MS,
-	 * forcefully terminates it and calls {@link Fail}. It will also print out the stdout/stderr of the process
-	 * before returning its exit code
-	 * @param p process to wait for
-	 * @return exit code of process
-	 */
-	private int processWait(Process p) {
-		int timeWaited = 0,
-			retVal = -256;
+	@Test (expected = ParameterException.class)
+	public void testInputNoPathFail() {
+		App app = new App();
+		app.setup(arg_inputShort_noval);
+		fail("Setup should fail if input flag is used with no value");
+	}
+	
+	@Test
+	public void testInitialisation() throws IOException {
 		
-		//Repeatedly try to get exit value and sleep on failure (not terminated yet)
-		while(timeWaited < TIMEOUT_MAX_MS) {
-			try {
-				retVal = p.exitValue();
-				break;
-			} catch (IllegalThreadStateException e) {
-				try{
-					Thread.sleep(TIMEOUT_STEP_MS);
-				} catch(InterruptedException ee) {
-					//don't really care about thread interrupts at this point
-				}
-				timeWaited += TIMEOUT_STEP_MS;
-			}
-		}
+		//prints help text to stdout.. unfortunately :/ redirecting it into the equivalent of /dev/null.. not sure in java.. ok,
+		//making a null output stream is easy enough, but replacing sysout after the fact.. hmm. I don't want to change the code
+		//any more in the name of testability
 		
-		//Clear and print the stdout/stderr buffers
-		BufferedReader stdout = new BufferedReader(new InputStreamReader(p.getInputStream())),
-					   stderr = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+		setup();
+		assertTrue(inputPath!=null);
+		assertTrue(outputPath!=null);
+		final String argSample[] = {"-i", inputPath.toString(), "-o", outputPath.toString(), "-e", "ODLCONFIG", "-m", "a=1", "-m", "b=2"};
+		
+		App app = new App();
+		app.setup(argSample);
+		
+		assertTrue(app.inputPath.equals(inputPath.toString()));
+		assertTrue(app.outputPath.equals(outputPath.toString()));
+		assertTrue(app.emitterName.equals("ODLCONFIG"));
+		//System.out.println(app.emitter.getClass().getName());
+		assertTrue(app.emitter instanceof ODLConfigEmitter);
+		
+		//check emitter parameters were correctly passed
+		HashMap<String, String> emitterParams = new HashMap<String, String>();
+		emitterParams.put("a", "1");
+		emitterParams.put("b", "2");
+		assertTrue(app.emitterArguments.equals(emitterParams));
+		
+		//we shouldn't be in a help mode
+		assertFalse(app.helpMode);
+		assertFalse(app.help_displayEmitters);
+		
+		//check that a file - rather than stdin - reader was set up
+		assertTrue(app.reader instanceof RpslObjectFileReader);
+		assertTrue(app.writer.outputEmitter instanceof ODLConfigEmitter);
+		
+		//System.out.println(app.writer.toString());
+		
+	}
+	
+//	@Test
+//	public void testXMLOutput() throws IOException {
+//		setup();
+//		final String argSample[] = {"-i", inputPath.toString(), "-o", outputPath.toString(), "-e", "XML"};
+//		
+//		JCommanderApp app = new JCommanderApp();
+//		app.setup(argSample);
+//		app.run();
+//		
+//		BufferedReader reader = new BufferedReader(new FileReader(outputPath.toFile()));
+//		String line;
+//		while((line=reader.readLine()) !=null) {
+//			System.out.println(line);
+//		}
+//		//TODO: Check output..
+//	}
+	
+	@Test
+	public void testODLConfigOutput() throws IOException {
+		setup();
+		final String argSample[] = {"-i", inputPath.toString(), "-o", outputPath.toString(), "-e", "ODLCONFIG"};
+		
+		App app = new App();
+		app.setup(argSample);
+		app.run();
+		
+		BufferedReader reader = new BufferedReader(new FileReader(outputPath.toFile()));
 		String line;
-		try{
-			while((line = stdout.readLine()) != null)
-				System.out.println("Child stdout: " + line);
-		} catch(IOException e) {
-			System.err.println("IOException while reading child stdout");
+		while((line=reader.readLine()) !=null) {
+			System.out.println(line);
 		}
-		try {
-			while((line = stderr.readLine()) != null)
-				System.out.println("Child stdout: " + line);
-		} catch(IOException e) {
-			System.err.println("IOException while reading child stderr");
-		}
+		//TODO: Check output..
+	}
+
+	@Test
+	public void testNullOutputToFile() throws IOException {
+		setup();
+		final String argSample[] = {"-i", inputPath.toString(), "-o", outputPath.toString(), "-e", "NULL"};
 		
-		//If it didn't terminate, kill process and fail
-		if(timeWaited >= TIMEOUT_MAX_MS) {
-			p.destroy();
-			fail("Child process did not terminate");
-		}
+		App app = new App();
+		app.setup(argSample);
+		app.run();
 		
-		return retVal;
+		BufferedReader reader = new BufferedReader(new FileReader(outputPath.toFile()));
+		assertTrue(reader.readLine() == null); //file should be empty
 	}
 	
-	//broken out, only used for debug purposes.
-	private void printWorkingDir() throws IOException
-	{
-    	Process pTest = runTime.exec("pwd"); //get us some clarity here.. nope.. how does one redirect stdout here..
-    	BufferedReader childReader = new BufferedReader(new InputStreamReader(pTest.getInputStream()));
-    	String line1;
-        while((line1 = childReader.readLine()) != null)
-        	System.out.println("Working directory: " + line1);
+	@Test
+	public void testSetupNullOutputToStdOut() throws IOException {
+		setup();
+		final String argSample[] = {"-i", inputPath.toString()};
+		
+		App app = new App();
+		app.setup(argSample);
+		
+		assertTrue(app.emitterName == null); //no emitter param passed in
+		assertTrue(app.emitter instanceof NullEmitter); //should default to NullEmitter
+		assertTrue(app.outputPath == null); // no output path was specified
 	}
 }
-
-/* Docs used
-/http://www.avajava.com/tutorials/general-java/how-do-i-run-another-application-from-java/RuntimeExecTest1.java
-/http://stackoverflow.com/questions/4741878/redirect-runtime-getruntime-exec-output-with-system-setout
-*/
