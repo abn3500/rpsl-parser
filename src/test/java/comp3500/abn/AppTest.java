@@ -242,12 +242,16 @@ public class AppTest {
 		app.setup(argSample);
 		app.run();
 		
-		BufferedReader reader = new BufferedReader(new FileReader(outputPath.toFile()));
-		String line;
-		while((line=reader.readLine()) !=null) {
-			System.out.println(line);
+		BufferedReader generatedConfigReader = new BufferedReader(new FileReader(outputPath.toFile()));
+		BufferedReader expectedConfigReader = new BufferedReader(new FileReader(outputPath.toFile()));
+		String generatedLine, expectedLine;
+		while((generatedLine=generatedConfigReader.readLine()) !=null) {
+			if((expectedLine = expectedConfigReader.readLine()) == null) //if we've exhausted the sample output before the generated output, we generated too many lines..
+				fail("Too many lines in output ODL config file");
+			assertTrue("Lines should match between sample output and generated output", expectedLine.equals(generatedLine));
+			//TODO: Ensure sample output here is valid!!!!
+			fail("Don't forget to make sure sample output is valid before signing off this code!!");
 		}
-		//TODO: Check output..
 	}
 
 	@Test
