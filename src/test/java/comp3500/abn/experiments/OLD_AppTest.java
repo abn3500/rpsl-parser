@@ -1,4 +1,4 @@
-package comp3500.abn;
+package comp3500.abn.experiments;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
