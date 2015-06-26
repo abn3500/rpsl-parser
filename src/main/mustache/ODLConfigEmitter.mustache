@@ -15,6 +15,7 @@
     <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv6?module=odl-bgp-treachability-ipv6-cfg&amp;revision=2013-11-15</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv4?module=odl-bgp-treachability-ipv4-cfg&amp;revision=2013-11-15</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:dom?module=opendaylight-md-sal-dom&amp;revision=2013-10-28</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:netty?module=netty&amp;revision=2013-11-19</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:protocol:framework?module=protocol-framework&amp;revision=2014-03-13</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=odl-topology-api-cfg&amp;revision=2013-11-15</capability>
@@ -76,6 +77,8 @@
           <name>{{name}}</name>
           <host>{{peerAddress}}</host>
           <holdtimer>180</holdtimer>
+          <peer-role>ebgp</peer-role> <!-- Assume external BGP peers -->
+          <remote-as>{{peerAutNum}}</remote-as>
           <advertized-table> <!-- Used as the route table for a peer/speaker relation -->
             <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-table-type</type>
             <name>ipv4-unicast</name>
@@ -92,17 +95,17 @@
 
         <!-- Application peer of {{name}} -->
         <module>
-          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-application-peer</type>
+          <type xmlns:x="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">x:bgp-application-peer</type>
           <name>{{name}}-app-peer</name>
           <application-rib-id>{{name}}-app-rib</application-rib-id>
           <bgp-peer-id>{{speaker.speakerAddress}}</bgp-peer-id>
           <target-rib>
-            <type xmlns:x="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:rib-instance</type>
+            <type xmlns:x="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">x:rib-instance</type>
             <name>{{name}}-rib</name>
           </target-rib>
           <data-broker>
-            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
-            <name>binding-data-broker</name>
+            <type xmlns:sal="urn:opendaylight:params:xml:ns:yang:controller:md:sal:dom">sal:dom-async-data-broker</type>
+            <name>pingpong-broker</name>
           </data-broker>
         </module>
 
@@ -127,8 +130,16 @@
           </bgp-dispatcher>
           <data-provider>
             <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
-            <name>binding-data-broker</name> <!--TODO Used to be pingpong-binding-data-broker -->
+            <name>pingpong-binding-data-broker</name>
           </data-provider>
+          <dom-data-provider>
+            <type xmlns:sal="urn:opendaylight:params:xml:ns:yang:controller:md:sal:dom">sal:dom-async-data-broker</type>
+            <name>pingpong-broker</name>
+          </dom-data-provider>
+          <codec-tree-factory>
+            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-codec-tree-factory</type>
+            <name>runtime-mapping-singleton</name>
+          </codec-tree-factory>
           <session-reconnect-strategy>
             <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
             <name>reconnect-strategy-factory</name>
