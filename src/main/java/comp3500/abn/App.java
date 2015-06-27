@@ -6,11 +6,9 @@
 package comp3500.abn;
 
 import java.io.IOException;
-import java.io.ObjectInputStream.GetField;
 import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
 
 import net.ripe.db.whois.common.io.RpslObjectFileReader;
 import net.ripe.db.whois.common.io.RpslObjectStreamReader;
@@ -177,6 +175,7 @@ public class App {
 		} catch (ParameterException e) {
 			System.out.println("ERROR parsing app flags/parameters: " + e.getMessage());
 			System.out.println(getUsageString());
+			System.exit(1);
 		}
 	}
 }
