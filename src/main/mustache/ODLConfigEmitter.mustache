@@ -149,6 +149,22 @@
             <name>reconnect-strategy-factory</name>
           </tcp-reconnect-strategy>
         </module>
+
+        <!-- Topology of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv4">prefix:bgp-reachability-ipv4</type>
+          <name>{{name}}-ipv4-topology</name>
+          <data-provider>
+            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
+            <name>pingpong-binding-data-broker</name>
+          </data-provider>
+          <local-rib>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg">prefix:rib</type>
+            <name>{{name}}-rib</name>
+          </local-rib>
+          <topology-id>{{name}}-ipv4-topology</topology-id>
+        </module>
+        
         <!--*****************************************************-->
         {{/peerSet}}
         <!--********************END OF PEERS*********************-->
@@ -193,6 +209,13 @@
           <instance>
             <name>{{name}}-rib</name>
             <provider>/config/modules/module[name='rib-impl']/instance[name='{{name}}-rib']</provider>
+          </instance>
+        </service>
+        <service>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:topology">prefix:topology-reference</type>
+          <instance>
+            <name>{{name}}-ipv4-topology</name>
+            <provider>/config/modules/module[name='bgp-reachability-ipv4']/instance[name='{{name}}-ipv4-topology']</provider>
           </instance>
         </service>
         <!--*****************************************************-->
