@@ -16,7 +16,6 @@ public class ODLReconnectStrategy {
 	/*
 	 * Template object fields
 	 */
-	String 	BGP_RECONNECT_STRATEGY_NAME = "reconnect-strategy-factory";
 	int		BGP_RECONNECT_SLEEP_MIN 	= 1000,
 			BGP_RECONNECT_SLEEP_MAX 	= 180000,
 			BGP_RECONNCET_CONNECT_TIME 	= 5000;
@@ -40,7 +39,6 @@ public class ODLReconnectStrategy {
 					case "BGP_RECONNECT_SLEEP_MAX": BGP_RECONNECT_SLEEP_MAX = Integer.parseInt(arg.getValue()); break;
 					case "BGP_RECONNCET_CONNECT_TIME": BGP_RECONNCET_CONNECT_TIME = Integer.parseInt(arg.getValue()); break;
 					case "BGP_RECONNCET_SLEEP_FACTOR": BGP_RECONNCET_SLEEP_FACTOR = Double.parseDouble(arg.getValue()); break;
-					case "BGP_RECONNECT_STRATEGY_NAME": BGP_RECONNECT_STRATEGY_NAME = arg.getValue(); break;
 				}
 			} catch(NumberFormatException e) {
 				//We failed to parse an integer or double

@@ -15,6 +15,7 @@
     <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv6?module=odl-bgp-treachability-ipv6-cfg&amp;revision=2013-11-15</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv4?module=odl-bgp-treachability-ipv4-cfg&amp;revision=2013-11-15</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding?module=opendaylight-md-sal-binding&amp;revision=2013-10-28</capability>
+    <capability>urn:opendaylight:params:xml:ns:yang:controller:md:sal:dom?module=opendaylight-md-sal-dom&amp;revision=2013-10-28</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:netty?module=netty&amp;revision=2013-11-19</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:protocol:framework?module=protocol-framework&amp;revision=2014-03-13</capability>
     <capability>urn:opendaylight:params:xml:ns:yang:controller:topology?module=odl-topology-api-cfg&amp;revision=2013-11-15</capability>
@@ -28,7 +29,7 @@
         {{#reconnectStrategy}}
         <module>
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:timed-reconnect-strategy-factory</type>
-          <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
+          <name>reconnect-strategy-factory</name>
           <min-sleep>{{BGP_RECONNECT_SLEEP_MIN}}</min-sleep>
           <max-sleep>{{BGP_RECONNECT_SLEEP_MAX}}</max-sleep>
           <sleep-factor>{{BGP_RECONNCET_SLEEP_FACTOR}}</sleep-factor>
@@ -68,6 +69,106 @@
         {{/speakerSet}}
         <!--*******************END OF SPEAKERS*******************-->
 
+        <!--*******************START OF PEERS********************-->
+        {{#peerSet}}
+        <!-- Peer of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer</type>
+          <name>{{name}}</name>
+          <host>{{peerAddress}}</host>
+          <holdtimer>180</holdtimer>
+          <peer-role>ebgp</peer-role> <!-- Assume external BGP peers -->
+          <remote-as>{{peerAutNum}}</remote-as>
+          <advertized-table> <!-- Used as the route table for a peer/speaker relation -->
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-table-type</type>
+            <name>ipv4-unicast</name>
+          </advertized-table>
+          <rib>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg">prefix:rib</type>
+            <name>{{name}}-rib</name>
+          </rib>
+          <peer-registry>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-peer-registry</type>
+            <name>{{peerRegistry}}</name>
+          </peer-registry>
+        </module>
+
+        <!-- Application peer of {{name}} -->
+        <module>
+          <type xmlns:x="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">x:bgp-application-peer</type>
+          <name>{{name}}-app-peer</name>
+          <application-rib-id>{{name}}-app-rib</application-rib-id>
+          <bgp-peer-id>{{speaker.speakerAddress}}</bgp-peer-id>
+          <target-rib>
+            <type xmlns:x="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">x:rib-instance</type>
+            <name>{{name}}-rib</name>
+          </target-rib>
+          <data-broker>
+            <type xmlns:sal="urn:opendaylight:params:xml:ns:yang:controller:md:sal:dom">sal:dom-async-data-broker</type>
+            <name>pingpong-broker</name>
+          </data-broker>
+        </module>
+
+        <!-- RIB of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:rib-impl</type>
+          <name>{{name}}-rib</name>
+          <rib-id>{{name}}-rib</rib-id>
+          <local-as>{{speaker.speakerAutNum}}</local-as>
+          <bgp-rib-id>{{speaker.speakerAddress}}</bgp-rib-id>
+          <local-table>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-table-type</type>
+            <name>ipv4-unicast</name> <!-- Used as the route table for a peer/speaker relation -->
+          </local-table>
+          <extensions>
+            <type xmlns:ribspi="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:spi">ribspi:extensions</type>
+            <name>global-rib-extensions</name>
+          </extensions>
+          <bgp-dispatcher>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:bgp-dispatcher</type>
+            <name>global-bgp-dispatcher</name>
+          </bgp-dispatcher>
+          <data-provider>
+            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
+            <name>pingpong-binding-data-broker</name>
+          </data-provider>
+          <dom-data-provider>
+            <type xmlns:sal="urn:opendaylight:params:xml:ns:yang:controller:md:sal:dom">sal:dom-async-data-broker</type>
+            <name>pingpong-broker</name>
+          </dom-data-provider>
+          <codec-tree-factory>
+            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-codec-tree-factory</type>
+            <name>runtime-mapping-singleton</name>
+          </codec-tree-factory>
+          <session-reconnect-strategy>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
+            <name>reconnect-strategy-factory</name>
+          </session-reconnect-strategy>
+          <tcp-reconnect-strategy>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
+            <name>reconnect-strategy-factory</name>
+          </tcp-reconnect-strategy>
+        </module>
+
+        <!-- Topology of {{name}} -->
+        <module>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:reachability:ipv4">prefix:bgp-reachability-ipv4</type>
+          <name>{{name}}-ipv4-topology</name>
+          <data-provider>
+            <type xmlns:binding="urn:opendaylight:params:xml:ns:yang:controller:md:sal:binding">binding:binding-async-data-broker</type>
+            <name>pingpong-binding-data-broker</name>
+          </data-provider>
+          <local-rib>
+            <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg">prefix:rib</type>
+            <name>{{name}}-rib</name>
+          </local-rib>
+          <topology-id>{{name}}-ipv4-topology</topology-id>
+        </module>
+        
+        <!--*****************************************************-->
+        {{/peerSet}}
+        <!--********************END OF PEERS*********************-->
+
       </modules>
       <services xmlns="urn:opendaylight:params:xml:ns:yang:controller:config">
         <!-- Reconnect strategy configuration. -->
@@ -75,8 +176,8 @@
         <service>
           <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:protocol:framework">prefix:reconnect-strategy-factory</type>
           <instance>
-            <name>{{BGP_RECONNECT_STRATEGY_NAME}}</name>
-            <provider>/config/modules/module[name='timed-reconnect-strategy-factory']/instance[name='{{BGP_RECONNECT_STRATEGY_NAME}}']</provider>
+            <name>reconnect-strategy-factory</name>
+            <provider>/config/modules/module[name='timed-reconnect-strategy-factory']/instance[name='reconnect-strategy-factory']</provider>
           </instance>
         </service>
         {{/reconnectStrategy}}
@@ -94,6 +195,32 @@
           {{/speakerSet}}
           <!--*******************END OF SPEAKERS*******************-->
         </service>
+        <!--*******************START OF PEERS********************-->
+        {{#peerSet}}
+        <service>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:cfg">prefix:rib</type>
+          <instance>
+            <name>{{name}}-rib</name>
+            <provider>/config/modules/module[name='rib-impl']/instance[name='{{name}}-rib']</provider>
+          </instance>
+        </service>
+        <service>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:bgp:rib:impl">prefix:rib-instance</type>
+          <instance>
+            <name>{{name}}-rib</name>
+            <provider>/config/modules/module[name='rib-impl']/instance[name='{{name}}-rib']</provider>
+          </instance>
+        </service>
+        <service>
+          <type xmlns:prefix="urn:opendaylight:params:xml:ns:yang:controller:topology">prefix:topology-reference</type>
+          <instance>
+            <name>{{name}}-ipv4-topology</name>
+            <provider>/config/modules/module[name='bgp-reachability-ipv4']/instance[name='{{name}}-ipv4-topology']</provider>
+          </instance>
+        </service>
+        <!--*****************************************************-->
+        {{/peerSet}}
+        <!--********************END OF PEERS*********************-->
       </services>
     </data>
   </configuration>
