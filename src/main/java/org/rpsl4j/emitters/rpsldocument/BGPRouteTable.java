@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
-import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 import net.ripe.db.whois.common.rpsl.attrs.IPAddress;
 
 import org.apache.commons.lang3.tuple.Pair;

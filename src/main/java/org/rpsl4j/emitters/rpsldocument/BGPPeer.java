@@ -9,7 +9,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
-import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 import net.ripe.db.whois.common.rpsl.attrs.IPAddress;
 
 /**

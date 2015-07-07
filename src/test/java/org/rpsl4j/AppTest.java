@@ -23,7 +23,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.rpsl4j.App;
 import org.rpsl4j.emitters.NullEmitter;
-import org.rpsl4j.emitters.XMLEmitter;
 import org.rpsl4j.emitters.odlconfig.ODLConfigEmitter;
 
 import com.beust.jcommander.ParameterException;
