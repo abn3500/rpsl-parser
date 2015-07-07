@@ -102,4 +102,36 @@ public class BGPRoute {
 	public int hashCode() {
 		return toString().hashCode();
 	}
+	
+	/**
+	 * Get the next hop of the route
+	 * @return next hop address for route
+	 */
+	public String getNextHopString() {
+		return nextHop;
+	}
+	
+	/**
+	 * Get the network address of the route
+	 * @return network of route
+	 */
+	public String getRouteNetworkString() {
+		return routeNetwork;
+	}
+	
+	/**
+	 * Get the prefix length of the route
+	 * @return length of route prefix
+	 */
+	public int getRoutePrefix() {
+		return routePrefix;
+	}
+	
+	/**
+	 * Get the prefix range object of the route
+	 * @return prefix range object
+	 */
+	public AddressPrefixRange getPrefixRange() {
+		return routePrefixObject;
+	}
 }

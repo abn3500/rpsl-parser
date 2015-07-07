@@ -149,4 +149,46 @@ public class BGPInetRtr {
 	public int hashCode() {
 		return toString().hashCode();
 	}
+
+	/**
+	 * Get the AutNum the inet-rtr is a member of
+	 * @return Speaker's AutNum
+	 */
+	public BGPAutNum getAutNumObject() {
+		return autNumObject;
+	}
+
+	/**
+	 * Get the listening address of the inet-rtr/speaker
+	 * @return address
+	 */
+	public String getSpeakerAddress() {
+		return speakerAddress;
+	}
+
+	/**
+	 * Get the configured name of the inet-rtr/speaker
+	 * @return name
+	 */
+	public String getSpeakerName() {
+		return speakerName;
+	}
+
+	/**
+	 * Get the peer registry the inet-rtr/speaker will accept (OpenDaylight specific)
+	 * @return peer-registry name
+	 */
+	public String getPeerRegistry() {
+		return peerRegistry;
+	}
+
+	/**
+	 * Get the Autnonomous System number of the inet-rtr
+	 * @return
+	 */
+	public long getSpeakerAutNum() {
+		return speakerAutNum;
+	}
+	
+	
 }

@@ -84,5 +84,54 @@ public class BGPPeer {
 		BGPPeer other = (BGPPeer) o;
 		return this.speaker.equals(other.speaker) && this.peerAddress.equals(other.peerAddress) && this.peerAutNum == other.peerAutNum;
 	}
+	
+	/**
+	 * Return a copy of the peers route table
+	 * @return Set of BGP Peers imported routes
+	 */
+	public Set<BGPRoute> getRoutes() {
+		return (new HashSet<BGPRoute>(routes));
+	}
+
+	/**
+	 * Get the speaker of the peer's session
+	 * @return peer's speaker
+	 */
+	public BGPInetRtr getSpeaker() {
+		return speaker;
+	}
+
+	/**
+	 * Get address of peer
+	 * @return peer's address
+	 */
+	public String getPeerAddress() {
+		return peerAddress;
+	}
+
+	/**
+	 * Get the name of the peer/speakers peer-registry (OpenDaylight Specific)
+	 * @return peer-registry name
+	 */
+	public String getPeerRegistry() {
+		return peerRegistry;
+	}
+
+	/**
+	 * Get the configured name of the peer
+	 * @return name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * Get the Autonomous System number of the peer
+	 * @return AS Number
+	 */
+	public long getPeerAutNum() {
+		return peerAutNum;
+	}
+	
 
 }
