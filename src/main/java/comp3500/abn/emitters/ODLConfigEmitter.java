@@ -6,16 +6,20 @@
 package comp3500.abn.emitters;
 
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 
+import comp3500.abn.emitters.odlconfig.BGPAutNum;
+import comp3500.abn.emitters.odlconfig.BGPInetRtr;
 import comp3500.abn.emitters.odlconfig.BGPPeer;
-import comp3500.abn.emitters.odlconfig.BGPSpeaker;
+import comp3500.abn.emitters.odlconfig.ODLReconnectStrategy;
+import net.ripe.db.whois.common.rpsl.AttributeType;
+import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 
 /**
@@ -24,74 +28,96 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
  */
 public class ODLConfigEmitter implements OutputEmitter {
 	private static final String TEMPLATE_RESOURCE = "mustache/ODLConfigEmitter.mustache"; 
-	
-	
-	Set<BGPSpeaker> bgpServers = new HashSet<BGPSpeaker>();
-	Set<BGPPeer> 	 bgpPeers 	= new HashSet<BGPPeer>();
-	
-	/*
-	 * BGP config file constants. 
-	 * These are configured by passing emitter arguments and are included in the template.
-	 */
-	String 	BGP_RECONNECT_STRATEGY_NAME = "reconnect-strategy-factory";
-	int		BGP_RECONNECT_SLEEP_MIN 	= 1000,
-			BGP_RECONNECT_SLEEP_MAX 	= 180000,
-			BGP_RECONNCET_CONNECT_TIME 	= 5000,
-			BGP_HOLD_TIME				= 180;
-	double 	BGP_RECONNCET_SLEEP_FACTOR 	= 2.0;
+	Set<BGPInetRtr> speakerSet;
+	Set<BGPPeer> peerSet;
+	ODLReconnectStrategy reconnectStrategy = new ODLReconnectStrategy();
 	
 	@Override
-	public String emit(Set<RpslObject> rpslObjects) {
+	public String emit(Set<RpslObject> objects) {	
+		//Generate the speaker and autnum sets
+		speakerSet = generateSpeakers(objects, generateAutNums(objects));
+		
+		//Generate the peer set
+		peerSet = generatePeers(speakerSet);
+		
+		//Instantiate the template engine and write the config
 		Mustache templateRenderer = (new DefaultMustacheFactory()).compile(TEMPLATE_RESOURCE);
 		StringWriter templateWriter = new StringWriter();
 		
-		//Parse the objects and build the object lists
-		parseObjects(rpslObjects);
-		
-		//Render template and flush stream
 		templateRenderer.execute(templateWriter, this);
 		templateWriter.flush();
 		
 		return templateWriter.toString();
 	}
-	
+
 	@Override
 	public void setArguments(Map<String, String> arguments) {
-		for(Entry<String, String> arg : arguments.entrySet()) {		
-			try {
-				switch(arg.getKey()) {
-					case "BGP_RECONNECT_SLEEP_MIN": BGP_RECONNECT_SLEEP_MIN = Integer.parseInt(arg.getValue()); break;
-					case "BGP_RECONNECT_SLEEP_MAX": BGP_RECONNECT_SLEEP_MAX = Integer.parseInt(arg.getValue()); break;
-					case "BGP_RECONNCET_CONNECT_TIME": BGP_RECONNCET_CONNECT_TIME = Integer.parseInt(arg.getValue()); break;
-					case "BGP_RECONNCET_SLEEP_FACTOR": BGP_RECONNCET_SLEEP_FACTOR = Double.parseDouble(arg.getValue()); break;
-					case "BGP_RECONNECT_STRATEGY_NAME": BGP_RECONNECT_STRATEGY_NAME = arg.getValue(); break;
-					case "BGP_HOLD_TIME": BGP_HOLD_TIME = Integer.parseInt(arg.getValue()); break;
-					default:
-						System.err.println("Unknown argument: " + arg.getKey());
-						break;
-				}
-			} catch(NumberFormatException e) {
-				//We failed to parse an integer or double
-				System.err.println("Failed to parse value: " + arg.getValue());
-			}
-		}
+		//Update the reconnect strategy using provided arguments
+		reconnectStrategy = new ODLReconnectStrategy(arguments);
 	}
 	
 	/**
-	 * Parse the RPSLObject stream by creating {@link BGPSpeaker}s from AUT_NUM {@link RpslObject}s,
-	 * and getting the set of their peers.
-	 * @param objects {@link RpslObject}s to parse
+	 * Generate the set of peers declared by {@link BGPInetRtr}s.
+	 * @param speakers Set of {@link BGPInetRtr}s
+	 * @return Set of declared {@link BGPPeer}s
 	 */
-	private void parseObjects(Set<RpslObject> objects) {
-		for(RpslObject object: objects) {
-			switch(object.getType()) {
-				case AUT_NUM:
-					BGPSpeaker speaker = new BGPSpeaker(object);
-					bgpServers.add(speaker);
-					bgpPeers.addAll(speaker.getPeers());
-					break;
-				default: break; //Ignore non handled attributes	
-			}
+	static Set<BGPPeer> generatePeers(Set<BGPInetRtr> speakers) {
+		HashSet<BGPPeer> peerSet = new HashSet<BGPPeer>();
+
+		for(BGPInetRtr speaker : speakers) {
+			peerSet.addAll(speaker.getPeers());
 		}
+		
+		return peerSet;
+	}
+	
+	/**
+	 * Generate the set of {@link BGPInetRtr}s declared in the RPSL document.
+	 * Peers must be members of declared {@link BGPAutNum} objects.
+	 * @param objects Set of {@link RpslObject}s
+	 * @param autNumMap Map of AS Numbers to {@link BGPAutNum}s to instantiate {@link BGPInetRtr} from
+	 * @return Set of declared {@link BGPInetRtr}s
+	 */
+	static Set<BGPInetRtr> generateSpeakers(Set<RpslObject> objects, Map<String, BGPAutNum> autNumMap) {		
+		HashSet<BGPInetRtr> speakerSet = new HashSet<BGPInetRtr>();
+		
+		//Iterate through object set to find inet-rtr objects
+		for(RpslObject o : objects) {
+			if(o.getType() != ObjectType.INET_RTR)
+				continue;
+			
+			//get AS of inet-rtr
+			String localAS = o.getValueForAttribute(AttributeType.LOCAL_AS).toString();
+			
+			if(!autNumMap.containsKey(localAS))
+				continue; //TODO handle this case better
+			
+			speakerSet.addAll(BGPInetRtr.getSpeakerInstances(o, autNumMap.get(localAS)));
+		}
+		
+		return speakerSet;
+
+	}
+	
+	/**
+	 * Instantiates {@link BGPAutNum} objects for each "aut-num" RPSL object
+	 * in the provided set.
+	 * @param objects Set of {@link RpslObject}s
+	 * @return Map of AS Numbers to {@link BGPAutNum}s as declared in objects
+	 */
+	static Map<String, BGPAutNum> generateAutNums(Set<RpslObject> objects) {
+		HashMap<String, BGPAutNum> autNumMap = new HashMap<String, BGPAutNum>();
+		
+		//Iterate through object set to find aut-num objects
+		for(RpslObject o: objects) {
+			if(o.getType() != ObjectType.AUT_NUM)
+				continue;
+			String asNumber = o.getTypeAttribute().getCleanValue().toString();
+			
+			//TODO check and handle case where asNumber is already inserted
+			autNumMap.put(asNumber, new BGPAutNum(o));
+		}
+		
+		return autNumMap;
 	}
 }

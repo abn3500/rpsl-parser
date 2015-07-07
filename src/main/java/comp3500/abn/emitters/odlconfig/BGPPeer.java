@@ -5,44 +5,85 @@
 
 package comp3500.abn.emitters.odlconfig;
 
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.apache.commons.lang3.tuple.Pair;
-
-import net.ripe.db.whois.common.rpsl.AttributeType;
+import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
 import net.ripe.db.whois.common.rpsl.attrs.AutNum;
+import net.ripe.db.whois.common.rpsl.attrs.IPAddress;
 
 /**
- * Represents the peer connections of the OpenDaylight configuration file.
+ * Representation of a BGP peer that can be emitted into an ODL configuration
  * @author Benjamin George Roberts
  */
 public class BGPPeer {
-	/*
-	 * Template values
-	 */
-	BGPSpeaker speaker;
-	String name,
-		   peerAddress,
-		   rib,
-		   tableName;	
+	protected Set<BGPRouteTable> routeTables = new HashSet<BGPRouteTable>();
+	protected Set<BGPRoute> routes = new HashSet<BGPRoute>();
+	protected BGPInetRtr speaker;
+	protected String peerAddress, peerRegistry, name;
+	protected long peerAutNum;
+
 	/**
-	 * Construct BGP Peer for a AS and with a given speaker
-	 * @param speaker
+	 * Construct a new BGPPeer of a given InetRtr/Speaker
+	 * @param peerAutNum AS of the peer
+	 * @param peerAddress Address of the peer
+	 * @param speaker BGP Speaker peered with this object
 	 */
-	public BGPPeer(BGPSpeaker speaker, AutNum asn) {
+	public BGPPeer(long peerAutNum, String peerAddress, BGPInetRtr speaker) {
+		//sanity check parameters
+		if(peerAutNum <= 0)
+			throw new IllegalArgumentException("Illegal peer ASN: " + peerAutNum);
+		try {
+			IPAddress.parse(peerAddress);
+		} catch (AttributeParseException e)
+		{
+			throw new IllegalArgumentException("Illegal peer address: " + peerAddress);
+		}
+
+		//Store fields
+		this.peerAutNum = peerAutNum;
+		this.peerAddress = peerAddress;
+		this.peerRegistry = speaker.peerRegistry;
 		this.speaker = speaker;
-		
-		this.name = String.format("AS%s-in-%s", asn.getValue(), speaker.name);
-		this.rib = name + "-rib";
-		this.tableName = name + "-export";
+		this.name = String.format("AS%d(%s)-peer-of-%s(%s)", peerAutNum, peerAddress, speaker.autNumObject.name, speaker.speakerAddress);
+
+		//Add routes
+		addRouteTable(speaker.autNumObject.getTableForAS(peerAutNum));
+		addRouteTable(speaker.autNumObject.getTableForPeer(peerAutNum, peerAddress));
 	}
-	
+
 	/**
-	 * Parses the attribute to extract routes imported or exported by this peer.
-	 * @param attr Parsed attribute to retrieve routes from
-	 * @param type type of route attribute (import, export, default)
+	 * Add a routing table to the BGPPeer. Will not add tables already included in peer
+	 * Will update both the set of routing tables and set of routes.
+	 * @param newTable table to add to peer
+	 * @return false if peer already had table
 	 */
-	public void addRoutes(List<Pair<String, List<String>>> attr, AttributeType type) {
-		//TODO implement
+	public boolean addRouteTable(BGPRouteTable newTable) {
+		if(routeTables.contains(newTable))
+			return false;
+
+		routeTables.add(newTable);
+		routes.addAll(newTable.routeSet);
+		return true;
 	}
+
+	@Override
+	public String toString() {
+		return name;
+	}
+
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if(!(o instanceof BGPPeer))
+			return false;
+
+		BGPPeer other = (BGPPeer) o;
+		return this.speaker.equals(other.speaker) && this.peerAddress.equals(other.peerAddress) && this.peerAutNum == other.peerAutNum;
+	}
+
 }
