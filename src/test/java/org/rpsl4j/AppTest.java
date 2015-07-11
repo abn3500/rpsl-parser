@@ -120,13 +120,13 @@ public class AppTest {
 		
 		assertTrue(inputPath!=null);
 		assertTrue(outputPath!=null);
-		final String argSample[] = {"-i", inputPath.toString(), "-o", outputPath.toString(), "-e", "ODLCONFIG", "-m", "a=1", "-m", "b=2"};
+		final String argSample[] = {"-i", inputPath.toString(), "-o", outputPath.toString(), "-e", ODLConfigEmitter.class.getName(), "-m", "a=1", "-m", "b=2"};
 		
 		app.setup(argSample);
 		
 		assertTrue(app.inputPath.equals(inputPath.toString()));
 		assertTrue(app.outputPath.equals(outputPath.toString()));
-		assertTrue(app.emitterName.equals("ODLCONFIG"));
+		assertTrue(app.emitterName.equals(ODLConfigEmitter.class.getName()));
 		//System.out.println(app.emitter.getClass().getName());
 		assertTrue(app.emitter instanceof ODLConfigEmitter);
 		
@@ -163,7 +163,7 @@ public class AppTest {
 	
 	@Test
 	public void testODLConfigOutput() throws IOException {
-		final String argSample[] = {"-i", inputPath.toString(), "-o", outputPath.toString(), "-e", "ODLCONFIG"};
+		final String argSample[] = {"-i", inputPath.toString(), "-o", outputPath.toString(), "-e", ODLConfigEmitter.class.getName()};
 		
 		app.setup(argSample);
 		app.run();

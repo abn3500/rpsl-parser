@@ -18,7 +18,7 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 
 public class OutputWriter {
 
-	OutputEmitter outputEmitter = OutputEmitters.defaultEmitter.get();
+	OutputEmitter outputEmitter = OutputEmitters.get(OutputEmitters.defaultEmitter);
 	Set<RpslObject> rpslObjects = new HashSet<RpslObject>();
 
 	public OutputWriter(Set<RpslObject> rpslObjects) {

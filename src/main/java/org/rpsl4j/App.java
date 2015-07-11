@@ -80,7 +80,7 @@ public class App {
 	}
 
 	public static String getAvailableEmitters() {
-		return "Available emitters: " + StringUtils.join(OutputEmitters.values(), ", ");
+		return "Available emitters: " + StringUtils.join(OutputEmitters.getEmitterList(), ", ");
 	}
 	
 	/**
@@ -102,11 +102,11 @@ public class App {
 		if(emitterArguments.size() > 0) {
 			emitter = (emitterName != null) ? 
 					(OutputEmitters.get(emitterName, emitterArguments)) :
-					(OutputEmitters.defaultEmitter.get(emitterArguments));
+					(OutputEmitters.get(OutputEmitters.defaultEmitter, emitterArguments));
 		} else {
 			emitter = (emitterName != null) ? 
 					(OutputEmitters.get(emitterName)) :
-					(OutputEmitters.defaultEmitter.get());
+			        (OutputEmitters.get(OutputEmitters.defaultEmitter));
 		}
 		
 		reader = (inputPath != null) ?
