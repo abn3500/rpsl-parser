@@ -17,9 +17,9 @@ public class OutputEmittersTest {
 
 	@Test
 	public void getReturnsInstance() {
-		for(OutputEmitters enumValue: OutputEmitters.values()) {
-			assertTrue(enumValue.name() + " must be instantiable",
-					enumValue.get() instanceof OutputEmitter);
+		for(String emitterName: OutputEmitters.scanClasspathForEmitters().keySet()) {
+			assertTrue(emitterName + " must be instantiable",
+					OutputEmitters.get(emitterName) instanceof OutputEmitter);
 		}
 	}
 	
@@ -28,5 +28,4 @@ public class OutputEmittersTest {
 		assertTrue("Invalid named enum values should return NullEmitter",
 			OutputEmitters.get("NOTATRUEVALUE") instanceof NullEmitter);
 	}
-
 }

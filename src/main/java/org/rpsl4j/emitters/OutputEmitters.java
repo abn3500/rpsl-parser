@@ -6,6 +6,10 @@
 package org.rpsl4j.emitters;
 
 import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+import org.rpsl4j.emitters.NullEmitter;
+import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 
 import org.rpsl4j.emitters.odlconfig.ODLConfigEmitter;
 
@@ -15,65 +19,74 @@ import org.rpsl4j.emitters.odlconfig.ODLConfigEmitter;
  * Construct and return new instances of these classes.
  * @author Benjamin George Roberts
  */
-public enum OutputEmitters {
-	NULL(NullEmitter.class),
-	XML(XMLEmitter.class),
-	ODLCONFIG(ODLConfigEmitter.class),
-	;
+public class OutputEmitters {
 
-	private Class<OutputEmitter> emitterClass;
-	public static final OutputEmitters defaultEmitter = NULL;
-	
-	@SuppressWarnings("unchecked")
-	private OutputEmitters(Class<?> emitterClass) {
-		this.emitterClass = (Class<OutputEmitter>) emitterClass;
-	}
-	
+	public static final String defaultEmitter = NullEmitter.class.getName();
+	public static final Map<String, Class<OutputEmitter>> emitterRegistry = new HashMap<String, Class<OutputEmitter>>();
+    public static final FastClasspathScanner cps = new FastClasspathScanner();
+    
+
+    static {
+        scanClasspathForEmitters();
+    }
+    
+    /**
+     * Search the classpath for classes implementing {@link OutputEmitter} and add them to the emitter registry
+     */
+    public static Map<String, Class<OutputEmitter>> scanClasspathForEmitters() {
+        //Clear registry and rescan classpath
+        emitterRegistry.clear();
+        cps.scan();
+        
+        for(String className : cps.getClassesImplementing(OutputEmitter.class)) {
+            try {
+                emitterRegistry.put(className, (Class<OutputEmitter>) Class.forName(className));
+            } catch (ClassNotFoundException e) {
+                System.err.println("Could not add class to emitterRegistry despite being subclass of OutputEmitter");
+                e.printStackTrace();
+            }
+        }
+        
+        return emitterRegistry;
+    }
+    
+    
 	/**
-	 * Instantiates an {@link OutputEmitter} corresponding with the Enumerator's value.
+	 * Instantiates an {@link OutputEmitter} corresponding to the class with the provided name in the emitter registry.
 	 * If the emitter cannot be instantiated an instance of the default emitter ({@link NullEmitter}) is returned. 
 	 * @return A new instance of the corresponding {@link OutputEmitter}
 	 */
-	public OutputEmitter get() {		
+	public static OutputEmitter get(String className) {		
 		OutputEmitter emitter;
+        
+        //Check if class exists in registry
+        if(!emitterRegistry.containsKey(className)) {
+			System.err.println("Illegal OutputEmitter in OutputEmitters (" +
+							   className + ")");
+            return get(defaultEmitter);
+        }
 
 		try {
-			emitter = this.emitterClass.newInstance();
-		} catch (InstantiationException | IllegalAccessException e) {
+            
+			emitter = emitterRegistry.get(className).newInstance();
+		} catch (InstantiationException | IllegalAccessException | NullPointerException e) {
 			//If we can't instantiate we will return the default emitter
 			System.err.println("Illegal OutputEmitter in OutputEmitters (" +
-							   this.name() + ")");
+							   className + ")");
 			e.printStackTrace();
-			emitter = defaultEmitter.get();
+			emitter = get(defaultEmitter);
 		}
 		
 		return emitter;
 	}
 	
-	public OutputEmitter get(Map<String, String> arguments) {
-		OutputEmitter emitter = get();
+	public static OutputEmitter get(String className, Map<String, String> arguments) {
+		OutputEmitter emitter = get(className);
 		emitter.setArguments(arguments);
 		return emitter;
 	}
-	
-	/**
-	 * Instantiates an {@link OutputEmitter} corresponding with the enumerator matching the name parameter.
-	 * If the emitter cannot be instantiated an instance of the default emitter ({@link NullEmitter}) is returned. 
-	 * @param name name of {@link OutputEmitter} to instantiate
-	 * @return A new instance of the corresponding {@link OutputEmitter}
-	 */
-	public static OutputEmitter get(String name) {
-		try {
-			return OutputEmitters.valueOf(name.toUpperCase()).get();
-		} catch (IllegalArgumentException e) {
-			return defaultEmitter.get();
-		}
-	}
-	
-	public static OutputEmitter get(String name, Map<String, String> arguments) {
-		OutputEmitter e = get(name);
-		e.setArguments(arguments);
-		return e;
-	}
-	
+    
+    public static Set<String> getEmitterList() {
+        return emitterRegistry.keySet();
+    }
 }
