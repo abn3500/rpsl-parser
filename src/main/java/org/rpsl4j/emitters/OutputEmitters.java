@@ -21,7 +21,7 @@ import org.rpsl4j.emitters.odlconfig.ODLConfigEmitter;
  */
 public class OutputEmitters {
 
-	public static final String defaultEmitter = NullEmitter.class.getName();
+	public static final String DEFAULT_EMITTER = NullEmitter.class.getName();
 	public static final Map<String, Class<OutputEmitter>> emitterRegistry = new HashMap<String, Class<OutputEmitter>>();
     public static final FastClasspathScanner cps = new FastClasspathScanner();
     
@@ -63,7 +63,7 @@ public class OutputEmitters {
         if(!emitterRegistry.containsKey(className)) {
 			System.err.println("Illegal OutputEmitter in OutputEmitters (" +
 							   className + ")");
-            return get(defaultEmitter);
+            return get(DEFAULT_EMITTER);
         }
 
 		try {
@@ -74,7 +74,7 @@ public class OutputEmitters {
 			System.err.println("Illegal OutputEmitter in OutputEmitters (" +
 							   className + ")");
 			e.printStackTrace();
-			emitter = get(defaultEmitter);
+			emitter = get(DEFAULT_EMITTER);
 		}
 		
 		return emitter;

@@ -102,11 +102,11 @@ public class App {
 		if(emitterArguments.size() > 0) {
 			emitter = (emitterName != null) ? 
 					(OutputEmitters.get(emitterName, emitterArguments)) :
-					(OutputEmitters.get(OutputEmitters.defaultEmitter, emitterArguments));
+					(OutputEmitters.get(OutputEmitters.DEFAULT_EMITTER, emitterArguments));
 		} else {
 			emitter = (emitterName != null) ? 
 					(OutputEmitters.get(emitterName)) :
-			        (OutputEmitters.get(OutputEmitters.defaultEmitter));
+			        (OutputEmitters.get(OutputEmitters.DEFAULT_EMITTER));
 		}
 		
 		reader = (inputPath != null) ?
