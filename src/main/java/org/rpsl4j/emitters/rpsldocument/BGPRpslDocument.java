@@ -138,7 +138,6 @@ public class BGPRpslDocument {
 	
 	/**
 	 * Generate the set of peers declared by {@link BGPInetRtr}s.
-	 * @param speakers Set of {@link BGPInetRtr}s
 	 * @return Set of declared {@link BGPPeer}s
 	 */
 	public Set<BGPPeer> getPeerSet() {

@@ -33,7 +33,7 @@ public class BGPAutNum {
 	protected long autNum;
 
 	/**
-	 * Maps of (AS-Peer, IP) -> [Routes].
+	 * Maps of (AS-Peer, IP) to [Routes].
 	 * Used to store the list of routes included for export to BGP peers
 	 */
 	protected Multimap<Pair<Long, String>, BGPRoute> includedRouteMap;
