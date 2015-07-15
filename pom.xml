@@ -5,7 +5,7 @@
   <groupId>org.rpsl4j</groupId>
   <artifactId>rpsl4j-generator</artifactId>
   <packaging>jar</packaging>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1</version>
 
   <name>rpsl4j configuration generator</name>
   <description>A command line application using rpsl4j-parser to generate routing configurations</description>
