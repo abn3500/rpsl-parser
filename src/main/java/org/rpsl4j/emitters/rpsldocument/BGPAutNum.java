@@ -85,7 +85,7 @@ public class BGPAutNum {
 
 	/**
 	 * Returns a set of triples, each containing an AS/IP pair, and the source of the exported route.
-	 * Example: to AS1 1.1.1.1 2.2.2.2 at 3.3.3.3 would return [((AS1, 1.1.1.1), 3.3.3.3), ((AS2, 2.2.2.2), 3.3.3.3)]
+	 * Example: to AS1 1.1.1.1 2.2.2.2 at 3.3.3.3 would return [((AS1, 1.1.1.1), 3.3.3.3), ((AS1, 2.2.2.2), 3.3.3.3)]
 	 * @param attr export attribute to retrieve peers from
 	 * @return Set of tuples of the form [((AS, PeerIP), LocalRouter)]
 	 */
