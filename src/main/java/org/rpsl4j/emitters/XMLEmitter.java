@@ -62,10 +62,12 @@ public class XMLEmitter implements OutputEmitter {
 			return "";
 		
 		Document rootDocument = docBuilder.newDocument();
+		Element rootElement = rootDocument.createElement("rpsl4j-document");
 		
 		for(RpslObject rpslObject : objects)
-			emitObject(rootDocument, rootDocument, rpslObject);
-		
+			emitObject(rootDocument, rootElement, rpslObject);
+
+		rootDocument.appendChild(rootElement);
 		return generateString(rootDocument);
 	}
 	

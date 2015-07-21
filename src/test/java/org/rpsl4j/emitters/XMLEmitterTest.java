@@ -82,7 +82,8 @@ public class XMLEmitterTest {
 			"remarks:  hostmaster@apnic.net 970528\n" + 
 			"source:   APNIC\n" + 
 			"changed:  hm-changed@apnic.net 20111109\n";
-	private static String EXAMPLE_RPSL_XML_OUTPUT = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" + 
+	private static String EXAMPLE_RPSL_XML_OUTPUT = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
+			"<rpsl4j-document>\n" +
 			"<aut-num value=\"AS7574\">\n" + 
 			"<as-name>AARNET-NT-RNO</as-name>\n" + 
 			"<descr>Australian Academic and Reasearch Network (AARNet)</descr>\n" + 
@@ -173,7 +174,8 @@ public class XMLEmitterTest {
 			"<remarks>hostmaster@apnic.net 970528</remarks>\n" + 
 			"<source>APNIC</source>\n" + 
 			"<changed>hm-changed@apnic.net 20111109</changed>\n" + 
-			"</aut-num>\n" + 
+			"</aut-num>\n" +
+			"</rpsl4j-document>\n" +
 			"";
 	
 	@Test
