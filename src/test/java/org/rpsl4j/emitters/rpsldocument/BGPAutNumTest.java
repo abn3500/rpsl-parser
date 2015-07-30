@@ -113,5 +113,17 @@ public class BGPAutNumTest {
 		assertEquals("Should return AS of requested peer", 2, autNum.getASOfPeer("1.1.1.1"));
 		assertTrue("Should return null for non-existant peer", autNum.getASOfPeer("1.2.3.4") == -1);
 	}
+	
+	@Test
+	public void resolveActions() {
+		RpslAttribute exportAttr = new RpslAttribute(AttributeType.EXPORT, 
+				"export: to AS1 1.1.1.1 at 1.1.1.1 action pref = 10; community .= 11\n"
+				+ "to AS1 at 1.1.1.1 action pref = 11;\n"
+				+ "to AS1 at 1.1.1.1;\n"
+				+ "announce 0.0.0.0/0");
+		Pair<Pair<Long, String>, String> exportPeer = Pair.of(Pair.of(1l, "1.1.1.1"), "2.2.2.2");
+				
+		BGPAutNum.resolveActions(exportAttr, exportPeer);
+	}
 
 }

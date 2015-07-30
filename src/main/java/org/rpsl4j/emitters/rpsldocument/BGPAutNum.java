@@ -5,8 +5,10 @@
 
 package org.rpsl4j.emitters.rpsldocument;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -74,8 +76,14 @@ public class BGPAutNum {
 
 			//Resolve the routes for the provided peer and corresponding local router, and add to the route map
 			for(Pair<Pair<Long, String>, String> exportPeer : exportPeers) {
-				//TODO ignores actions, need to for each peer
-				includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight()));
+				//Get action statements
+				Map<String, String> routeActions = resolveActions(attr, exportPeer);
+				
+				if(routeActions.size() == 0)				
+					includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight()));
+				else
+					includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight(), routeActions));
+
 			}
 		}
 
@@ -180,5 +188,59 @@ public class BGPAutNum {
 	@Override
 	public String toString() {
 		return String.format("%s (AS%s)", name, autNum);
+	}
+	
+	public static Map<String, String> resolveActions(RpslAttribute attr, Pair<Pair<Long, String>, String> exportPeer) {
+		List<Pair<String, List<String>>> tokenList = attr.getTokenList();
+		Map<String, String> actionMap = new HashMap<String, String>();
+		String 	as = String.format("AS%d", exportPeer.getLeft().getLeft()),
+				peer = exportPeer.getLeft().getRight(),
+				nextHop = exportPeer.getRight();
+		boolean isDefaultPeer = peer.equals("0.0.0.0");
+		
+		
+		//Find actions for passed peer
+		for(int i = 0; i < tokenList.size(); i++) {
+			Pair<String, List<String>> token = tokenList.get(i);
+			
+			//Skip tokens that don't specify a peer
+			if(!token.getLeft().equals("to"))
+				continue;
+			
+			//Skip tokens that don't have matching "at" after them
+			if(i + 1 >= tokenList.size() || !tokenList.get(i+1).getLeft().equals("at"))
+				continue;
+			
+			//Check that next hop matches
+			if(!tokenList.get(i+1).getRight().equals(nextHop))
+				continue;
+			
+			//Check that token value is long enough to hold a peer & AS
+			//If we are looking for 0.0.0.0 peer attr only needs AS
+			if(!(token.getRight().size() >= (isDefaultPeer ? 1 : 2)))
+				continue;
+			
+			//Check matching peer AS
+			if(!token.getRight().get(0).equals(as))
+				continue;
+			
+			//Check for peer address if not searching for default peer
+			if(!(isDefaultPeer || token.getRight().contains(peer)))
+				continue;
+			
+			//If you've gotten this far, you have the right peer, capture next action argument
+			if(i+2 > tokenList.size() || !tokenList.get(i+2).getLeft().equals("action"))
+				continue;
+			
+			//Add peers actions to the map
+			List<String> actionList = tokenList.get(i+2).getRight();
+			for(int j = 0; i + 2 < actionList.size(); j += 3)
+				actionMap.put(actionList.get(j), actionList.get(j+2));
+			
+			//Map built, can break loop
+			break;			
+		}
+		
+		return actionMap;
 	}
 }

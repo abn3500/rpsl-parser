@@ -7,8 +7,11 @@
 package org.rpsl4j.emitters.rpsldocument;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -32,6 +35,7 @@ public class BGPRoute {
 	String 	nextHop,
 			routeNetwork;
 	int 	routePrefix;
+	private Map<String, String> actions;
 	
 	public BGPRoute(AddressPrefixRange routePrefixObject, String nextHop) {
 		this.routePrefixObject = routePrefixObject;
@@ -83,6 +87,13 @@ public class BGPRoute {
 		
 	}
 	
+	static Set<BGPRoute> resolveRoutes(RpslAttribute exportAttr, String localRouter, Map<String, String> actionMap) {
+		Set<BGPRoute> routes = resolveRoutes(exportAttr, localRouter);
+		for(BGPRoute r : routes)
+			r.setActions(actionMap);
+		return routes;
+	}
+	
 	@Override
 	public boolean equals(Object other) {
 		if(!(other instanceof BGPRoute)) {
@@ -101,6 +112,25 @@ public class BGPRoute {
 	@Override
 	public int hashCode() {
 		return toString().hashCode();
+	}
+	
+	/**
+	 * Set the actions of the BGP route
+	 * @param actionMap map of actions to add
+	 */
+	public void setActions(Map<String, String> actionMap) {
+		actions.clear();
+		actions.putAll(actionMap);
+	}
+	
+	/**
+	 * Returns a map of the BGP routes actions
+	 * @return map of action name to value
+	 */
+	public Map<String, String> getActions() {
+		Map<String, String> ret = new HashMap();
+		ret.putAll(actions);
+		return ret;
 	}
 	
 	/**
