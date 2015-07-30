@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,7 +34,7 @@ public class BGPRoute {
 	String 	nextHop,
 			routeNetwork;
 	int 	routePrefix;
-	private Map<String, String> actions;
+	private Map<String, String> actions = new HashMap<String, String>();
 	
 	public BGPRoute(AddressPrefixRange routePrefixObject, String nextHop) {
 		this.routePrefixObject = routePrefixObject;
@@ -128,7 +127,7 @@ public class BGPRoute {
 	 * @return map of action name to value
 	 */
 	public Map<String, String> getActions() {
-		Map<String, String> ret = new HashMap();
+		Map<String, String> ret = new HashMap<String, String>();
 		ret.putAll(actions);
 		return ret;
 	}

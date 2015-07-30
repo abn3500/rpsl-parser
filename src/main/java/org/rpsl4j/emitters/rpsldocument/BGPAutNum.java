@@ -83,7 +83,6 @@ public class BGPAutNum {
 					includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight()));
 				else
 					includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight(), routeActions));
-
 			}
 		}
 
@@ -190,14 +189,24 @@ public class BGPAutNum {
 		return String.format("%s (AS%s)", name, autNum);
 	}
 	
+	/**
+	 * Extracts the action statements present in an export attribute which are associated with a particular peer.
+	 * Searches through the export attribute to find the peering specification for the specified peer. Once this
+	 * is found the series of action tokens (such as pref = 10 etc) are located and added to a key value map.
+	 * @param attr Export attribute
+	 * @param exportPeer peer in form ((AS number, peer address), nexthop)
+	 * @return Map of preferences to assigned values for peer
+	 */
 	public static Map<String, String> resolveActions(RpslAttribute attr, Pair<Pair<Long, String>, String> exportPeer) {
+		//Sanity check on attr
+		if(attr.getType() != AttributeType.EXPORT) throw new IllegalArgumentException("Requires EXPORT attribtue, got " + attr.getType());
+		
 		List<Pair<String, List<String>>> tokenList = attr.getTokenList();
 		Map<String, String> actionMap = new HashMap<String, String>();
 		String 	as = String.format("AS%d", exportPeer.getLeft().getLeft()),
 				peer = exportPeer.getLeft().getRight(),
 				nextHop = exportPeer.getRight();
 		boolean isDefaultPeer = peer.equals("0.0.0.0");
-		
 		
 		//Find actions for passed peer
 		for(int i = 0; i < tokenList.size(); i++) {
@@ -211,8 +220,8 @@ public class BGPAutNum {
 			if(i + 1 >= tokenList.size() || !tokenList.get(i+1).getLeft().equals("at"))
 				continue;
 			
-			//Check that next hop matches
-			if(!tokenList.get(i+1).getRight().equals(nextHop))
+			//Check that next hop exists and matches
+			if(!(tokenList.get(i+1).getRight().size() == 1 && tokenList.get(i+1).getRight().get(0).equals(nextHop)))
 				continue;
 			
 			//Check that token value is long enough to hold a peer & AS
@@ -222,6 +231,10 @@ public class BGPAutNum {
 			
 			//Check matching peer AS
 			if(!token.getRight().get(0).equals(as))
+				continue;
+			
+			//If looking for default peer, make sure this is a peerless line
+			if(isDefaultPeer && !(token.getRight().size() == 1))
 				continue;
 			
 			//Check for peer address if not searching for default peer
@@ -234,7 +247,7 @@ public class BGPAutNum {
 			
 			//Add peers actions to the map
 			List<String> actionList = tokenList.get(i+2).getRight();
-			for(int j = 0; i + 2 < actionList.size(); j += 3)
+			for(int j = 0; j + 2 < actionList.size(); j += 3)
 				actionMap.put(actionList.get(j), actionList.get(j+2));
 			
 			//Map built, can break loop

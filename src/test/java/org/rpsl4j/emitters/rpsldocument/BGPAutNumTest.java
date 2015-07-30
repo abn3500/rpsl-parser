@@ -116,14 +116,34 @@ public class BGPAutNumTest {
 	
 	@Test
 	public void resolveActions() {
-		RpslAttribute exportAttr = new RpslAttribute(AttributeType.EXPORT, 
-				"export: to AS1 1.1.1.1 at 1.1.1.1 action pref = 10; community .= 11\n"
-				+ "to AS1 at 1.1.1.1 action pref = 11;\n"
-				+ "to AS1 at 1.1.1.1;\n"
-				+ "announce 0.0.0.0/0");
-		Pair<Pair<Long, String>, String> exportPeer = Pair.of(Pair.of(1l, "1.1.1.1"), "2.2.2.2");
+		BGPAutNum autNum = new BGPAutNum(RpslObject.parse(
+				"aut-num: AS1\n"
+				+ "as-name: TEST-AS\n"
+				+ "export: 	to AS1 1.1.1.1 at 1.1.1.1 action pref = 10; community .= 11\n"
+				+ "			to AS1 at 1.1.1.1 action pref = 11\n"
+				+ "			to AS2 at 1.1.1.1"
+				+ " 		announce 0.0.0.0/0"));
 				
-		BGPAutNum.resolveActions(exportAttr, exportPeer);
+		//Check (only) route in as1 1.1.1.1 peer for pref = 10, community = 11
+		assertTrue("table should contain route", autNum.getTableForPeer(1, "1.1.1.1").routeSet.size() == 1);
+		for(BGPRoute r : autNum.getTableForPeer(1, "1.1.1.1").routeSet) {
+			assertTrue("route should include provided pref attribute", r.getActions().containsKey("pref"));
+			assertEquals("route should include correct value for pref action", "10", r.getActions().get("pref"));
+			assertTrue("route should include provided pref attribute", r.getActions().containsKey("community"));
+			assertEquals("route should include correct value for community action", "11", r.getActions().get("community"));
+		}
+		
+		//Check (only) route in as1 0.0.0 peer for pref = 11
+		assertTrue("table should contain route", autNum.getTableForPeer(1, "0.0.0.0").routeSet.size() == 1);
+		for(BGPRoute r : autNum.getTableForPeer(1, "0.0.0.0").routeSet) {
+			assertTrue("route should include provided pref attribute", r.getActions().containsKey("pref"));
+			assertEquals("route should include correct value for pref action", "11", r.getActions().get("pref"));
+		}
+		
+		//Check that as2 0.0.0.0 has no actions
+		assertTrue("table should contain route", autNum.getTableForPeer(2, "0.0.0.0").routeSet.size() == 1);
+		for(BGPRoute r : autNum.getTableForPeer(2, "0.0.0.0").routeSet)
+			assertTrue("as without actions should not have actions in any routes", r.getActions().size() == 0);
 	}
 
 }
