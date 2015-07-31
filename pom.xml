@@ -63,11 +63,6 @@
       <version>3.0</version>
     </dependency>
     <dependency>
-      <groupId>com.github.spullara.mustache.java</groupId>
-      <artifactId>compiler</artifactId>
-      <version>0.8.17</version>
-    </dependency>
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.12</version>
@@ -86,15 +81,6 @@
   </dependencies>
 
   <build>
-    <!-- Add mustache templates to package -->
-    <resources>
-      <resource>
-        <directory>src/main</directory>
-        <includes>
-          <include>mustache/*.mustache</include>
-        </includes>
-      </resource>
-    </resources>
     <plugins>
       <!-- Set Java7 as source/target for compilation -->
       <plugin>
