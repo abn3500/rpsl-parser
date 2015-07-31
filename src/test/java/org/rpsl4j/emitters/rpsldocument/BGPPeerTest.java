@@ -80,5 +80,11 @@ public class BGPPeerTest {
 		assertEquals("Same peers should be equal", (new BGPPeer(2, "2.2.2.2", inetRtr)), (new BGPPeer(2, "2.2.2.2", inetRtr)));
 		assertNotEquals("Different peers should not be equal", (new BGPPeer(2, "2.2.2.2", inetRtr)), (new BGPPeer(2, "2.2.2.3", inetRtr)));
 	}
+	
+	@Test
+	public void checkInternalPeer() {
+		assertTrue("Peer with same autnum as speaker should be internal", (new BGPPeer(1, "2.2.2.2", inetRtr)).isInternalPeer);
+		assertFalse("Peer with different autnum as speaker should not be internal", (new BGPPeer(2, "2.2.2.2", inetRtr)).isInternalPeer);
+	}
 
 }

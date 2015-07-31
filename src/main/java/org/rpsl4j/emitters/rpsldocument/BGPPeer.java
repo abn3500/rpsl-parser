@@ -21,6 +21,7 @@ public class BGPPeer {
 	protected BGPInetRtr speaker;
 	protected String peerAddress, peerRegistry, name;
 	protected long peerAutNum;
+	protected boolean isInternalPeer;
 
 	/**
 	 * Construct a new BGPPeer of a given InetRtr/Speaker
@@ -45,7 +46,8 @@ public class BGPPeer {
 		this.peerRegistry = speaker.peerRegistry;
 		this.speaker = speaker;
 		this.name = String.format("AS%d(%s)-peer-of-%s(%s)", peerAutNum, peerAddress, speaker.autNumObject.name, speaker.speakerAddress);
-
+		this.isInternalPeer = peerAutNum == speaker.speakerAutNum;
+		
 		//Add routes
 		addRouteTable(speaker.autNumObject.getTableForAS(peerAutNum));
 		addRouteTable(speaker.autNumObject.getTableForPeer(peerAutNum, peerAddress));
