@@ -45,11 +45,11 @@ public class App {
 	@Parameter (names = {"-h", "--help"}, help = true, description = "Dispaly usage information")
 	protected boolean helpMode = false;
 	
-	@Parameter (names = {"--list-emitters"}, help = true, description = "List available emitters, and their arguments, to format output with")
+	@Parameter (names = {"--list-emitters"}, help = true, description = "List available emitters to format output with")
 	protected boolean help_displayEmitters = false;
 	
 	@Parameter (names = {"--list-arguments"}, help = true, description = "List valid arguments for provided emitter")
-	protected Map<String, String> emitterValidArgs = new HashMap<String, String>();
+	protected boolean help_listArguments = false;
 	
 	
 	protected OutputEmitter emitter;
@@ -67,7 +67,9 @@ public class App {
 			"    -i, --input\n" + 
 			"       Input path (omit for stdin)\n\n" + 
 			"    --list-emitters\n" + 
-			"       List emitters available, and their arguments, to format output with\n\n" + 
+			"       List emitters available to format output with\n\n" +
+			"    --list-arguments\n" + 
+			"       List valid arguments for provided emitter\n\n" +
 			"    -o, --output\n" + 
 			"       Output path (omit for stdout)\n\n" + 
 			"    -m\n" + 
@@ -86,19 +88,14 @@ public class App {
 	}
 
 	public static String getAvailableEmitters() {
-		List<String> availableEmitters = new ArrayList<String>(OutputEmitters.getEmitterList());
-		String returnString = "Available emmiters: \n";
-		for (int i = 0; i < availableEmitters.size(); i++){
-			String emitterArgs = "";
-			if (OutputEmitters.get(availableEmitters.get(i)).validArguments().isEmpty()){
-				emitterArgs = "this emitter accepts no arguments";
-			}
-			else {
-				emitterArgs = (OutputEmitters.get(availableEmitters.get(i)).validArguments()).toString();
-			}
-			returnString += availableEmitters.get(i) + ", with arguments: " + emitterArgs + "\n";
+		return "Available emitters: " + StringUtils.join(OutputEmitters.getEmitterList(), ", ");
+	}
+	
+	public static String getEmitterArguments(OutputEmitter argsEmitter) {
+		if (argsEmitter.validArguments().isEmpty()){
+			return "Valid Arguments for "+ argsEmitter.toString() + ": This emitter does not accept arguments";
 		}
-		return returnString;
+		return "Valid Arguments for " + argsEmitter.toString() + ": " + argsEmitter.validArguments().toString();
 	}
 	
 	
@@ -112,7 +109,7 @@ public class App {
 
 		JCommander cliArgParser = new JCommander(this, args); //parse params - ParameterException may be thrown		
 		
-		if(helpMode || help_displayEmitters) //if a help mode was triggered, don't do any work, just alert the caller that some kind of help text should be displayed.
+		if(helpMode || help_displayEmitters || help_listArguments) //if a help mode was triggered, don't do any work, just alert the caller that some kind of help text should be displayed.
 			return false;
 		//else: we're not in help mode - go forth and configure the app for the real work
 		
@@ -189,6 +186,14 @@ public class App {
 					System.out.println(getUsageString());
 				if(launcher.help_displayEmitters)
 					System.out.println(getAvailableEmitters());
+				if(launcher.help_listArguments){
+					if (launcher.emitter != null) {
+						System.out.println(getEmitterArguments(launcher.emitter));
+					}
+					else {
+						System.out.println("Emitter was not defined, valid arguments cannot be retreived");
+					}
+				}
 			}
 		} catch (ParameterException e) {
 			System.out.println("ERROR parsing app flags/parameters: " + e.getMessage());
