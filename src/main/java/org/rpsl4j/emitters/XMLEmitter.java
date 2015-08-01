@@ -8,6 +8,7 @@ package org.rpsl4j.emitters;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -117,7 +118,6 @@ public class XMLEmitter implements OutputEmitter {
 				}
 			} catch(ClassNotFoundException e) {
 				//No lexer, add this attirbute as <type>value</type>. 
-				System.err.println("No lexer for " + attr.getType().getName() + ", attribute will be added to object unparsed");
 				Set<CIString> attrValues = attr.getCleanValues();
 				
 				//Add a tag for each attribute
@@ -186,6 +186,11 @@ public class XMLEmitter implements OutputEmitter {
 	 */
 	@Override
 	public void setArguments(Map<String, String> arguments) {		
+	}
+	
+	@Override
+	public Map<String, String> validArguments(){
+		return new HashMap<String, String>();
 	}
 
 }

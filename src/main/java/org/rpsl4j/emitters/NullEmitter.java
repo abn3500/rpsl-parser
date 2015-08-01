@@ -5,6 +5,7 @@
 
 package org.rpsl4j.emitters;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +25,11 @@ public class NullEmitter implements OutputEmitter {
 
 	@Override
 	public void setArguments(Map<String, String> arguments) {		
+	}
+	
+	@Override
+	public Map<String, String> validArguments(){
+		return new HashMap<String, String>();
 	}
 
 }

@@ -6,7 +6,10 @@
 package org.rpsl4j;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.rpsl4j.emitters.OutputEmitter;
@@ -42,8 +45,11 @@ public class App {
 	@Parameter (names = {"-h", "--help"}, help = true, description = "Dispaly usage information")
 	protected boolean helpMode = false;
 	
-	@Parameter (names = {"--list-emitters"}, help = true, description = "List available emitters to format output with")
+	@Parameter (names = {"--list-emitters"}, help = true, description = "List available emitters, and their arguments, to format output with")
 	protected boolean help_displayEmitters = false;
+	
+	@Parameter (names = {"--list-arguments"}, help = true, description = "List valid arguments for provided emitter")
+	protected Map<String, String> emitterValidArgs = new HashMap<String, String>();
 	
 	
 	protected OutputEmitter emitter;
@@ -61,7 +67,7 @@ public class App {
 			"    -i, --input\n" + 
 			"       Input path (omit for stdin)\n\n" + 
 			"    --list-emitters\n" + 
-			"       List emitters available to format output with\n\n" + 
+			"       List emitters available, and their arguments, to format output with\n\n" + 
 			"    -o, --output\n" + 
 			"       Output path (omit for stdout)\n\n" + 
 			"    -m\n" + 
@@ -80,8 +86,21 @@ public class App {
 	}
 
 	public static String getAvailableEmitters() {
-		return "Available emitters: " + StringUtils.join(OutputEmitters.getEmitterList(), ", ");
+		List<String> availableEmitters = new ArrayList<String>(OutputEmitters.getEmitterList());
+		String returnString = "Available emmiters: \n";
+		for (int i = 0; i < availableEmitters.size(); i++){
+			String emitterArgs = "";
+			if (OutputEmitters.get(availableEmitters.get(i)).validArguments().isEmpty()){
+				emitterArgs = "this emitter accepts no arguments";
+			}
+			else {
+				emitterArgs = (OutputEmitters.get(availableEmitters.get(i)).validArguments()).toString();
+			}
+			returnString += availableEmitters.get(i) + ", with arguments: " + emitterArgs + "\n";
+		}
+		return returnString;
 	}
+	
 	
 	/**
 	 * Initialises the application
