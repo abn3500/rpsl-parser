@@ -129,7 +129,7 @@ public class BGPAutNumTest {
 		for(BGPRoute r : autNum.getTableForPeer(1, "1.1.1.1").routeSet) {
 			assertTrue("route should include provided pref attribute", r.getActions().containsKey("pref"));
 			assertEquals("route should include correct value for pref action", "10", r.getActions().get("pref"));
-			assertTrue("route should include provided pref attribute", r.getActions().containsKey("community"));
+			assertTrue("route should include provided community attribute", r.getActions().containsKey("community"));
 			assertEquals("route should include correct value for community action", "11", r.getActions().get("community"));
 		}
 		
