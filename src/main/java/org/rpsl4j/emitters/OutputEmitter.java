@@ -29,5 +29,11 @@ public interface OutputEmitter {
 	 * Provide a set of arguments to the emitter instance. Implementers don't nessecarily have to accept arguments
 	 * @param arguments Set of arguments to apply
 	 */
-	 void setArguments(Map<String, String> arguments);
+	void setArguments(Map<String, String> arguments);
+
+	/**
+	 * Provide a map of valid arguments and their descriptions
+	 * @return map of argument name to argument description
+	 */
+	public Map<String, String> validArguments();
 }

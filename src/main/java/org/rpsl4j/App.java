@@ -6,7 +6,10 @@
 package org.rpsl4j;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.rpsl4j.emitters.OutputEmitter;
@@ -45,6 +48,9 @@ public class App {
 	@Parameter (names = {"--list-emitters"}, help = true, description = "List available emitters to format output with")
 	protected boolean help_displayEmitters = false;
 	
+	@Parameter (names = {"--list-arguments"}, help = true, description = "List valid arguments for provided emitter")
+	protected boolean help_listArguments = false;
+	
 	
 	protected OutputEmitter emitter;
 	protected RpslObjectStreamReader reader;
@@ -61,7 +67,9 @@ public class App {
 			"    -i, --input\n" + 
 			"       Input path (omit for stdin)\n\n" + 
 			"    --list-emitters\n" + 
-			"       List emitters available to format output with\n\n" + 
+			"       List emitters available to format output with\n\n" +
+			"    --list-arguments\n" + 
+			"       List valid arguments for provided emitter\n\n" +
 			"    -o, --output\n" + 
 			"       Output path (omit for stdout)\n\n" + 
 			"    -m\n" + 
@@ -83,6 +91,14 @@ public class App {
 		return "Available emitters: " + StringUtils.join(OutputEmitters.getEmitterList(), ", ");
 	}
 	
+	public static String getEmitterArguments(OutputEmitter argsEmitter) {
+		if (argsEmitter.validArguments().isEmpty()){
+			return "Valid Arguments for "+ argsEmitter.toString() + ": This emitter does not accept arguments";
+		}
+		return "Valid Arguments for " + argsEmitter.toString() + ": " + argsEmitter.validArguments().toString();
+	}
+	
+	
 	/**
 	 * Initialises the application
 	 * @param args arguments to initialise the application with (should generally be passed through from main())
@@ -93,7 +109,7 @@ public class App {
 
 		JCommander cliArgParser = new JCommander(this, args); //parse params - ParameterException may be thrown		
 		
-		if(helpMode || help_displayEmitters) //if a help mode was triggered, don't do any work, just alert the caller that some kind of help text should be displayed.
+		if(helpMode || help_displayEmitters || help_listArguments) //if a help mode was triggered, don't do any work, just alert the caller that some kind of help text should be displayed.
 			return false;
 		//else: we're not in help mode - go forth and configure the app for the real work
 		
@@ -170,6 +186,14 @@ public class App {
 					System.out.println(getUsageString());
 				if(launcher.help_displayEmitters)
 					System.out.println(getAvailableEmitters());
+				if(launcher.help_listArguments){
+					if (launcher.emitter != null) {
+						System.out.println(getEmitterArguments(launcher.emitter));
+					}
+					else {
+						System.out.println("Emitter was not defined, valid arguments cannot be retreived");
+					}
+				}
 			}
 		} catch (ParameterException e) {
 			System.out.println("ERROR parsing app flags/parameters: " + e.getMessage());
