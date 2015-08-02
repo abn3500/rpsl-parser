@@ -55,7 +55,7 @@
     <dependency>
       <groupId>org.rpsl4j</groupId>
       <artifactId>rpsl4j-parser</artifactId>
-      <version>1.80</version>
+      <version>1.81</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
