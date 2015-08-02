@@ -111,6 +111,7 @@ public class App {
 	 */
 	protected boolean setup(String args[]) throws ParameterException { //changed to bool to enable easier testing.. yes, I know.. And in hindsight, better modularity in general..
 
+		@SuppressWarnings("unused")
 		JCommander cliArgParser = new JCommander(this, args); //parse params - ParameterException may be thrown		
 		
 		if(helpMode || help_displayEmitters) //if a help mode was triggered, don't do any work, just alert the caller that some kind of help text should be displayed.
