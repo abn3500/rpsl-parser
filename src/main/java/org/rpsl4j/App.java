@@ -6,10 +6,8 @@
 package org.rpsl4j;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.rpsl4j.emitters.OutputEmitter;
@@ -91,11 +89,17 @@ public class App {
 		return "Available emitters: " + StringUtils.join(OutputEmitters.getEmitterList(), ", ");
 	}
 	
-	public static String getEmitterArguments(OutputEmitter argsEmitter) {
-		if (argsEmitter.validArguments().isEmpty()){
-			return "Valid Arguments for "+ argsEmitter.toString() + ": This emitter does not accept arguments";
+	public static void printEmitterArguments(OutputEmitter argsEmitter) {
+		if(argsEmitter == null) {
+			System.out.println("Emitter was not defined, valid arguments cannot be retreived");
+		} else if (argsEmitter.validArguments().isEmpty()){
+			System.out.println("This emitter does not accept arguments");
+		} else {
+			System.out.println("Available Arguments: ");
+			for (Entry<String, String> arg : argsEmitter.validArguments().entrySet()) {
+				System.out.println(arg.getKey() + ": " + arg.getValue());
+			}
 		}
-		return "Valid Arguments for " + argsEmitter.toString() + ": " + argsEmitter.validArguments().toString();
 	}
 	
 	
@@ -109,7 +113,7 @@ public class App {
 
 		JCommander cliArgParser = new JCommander(this, args); //parse params - ParameterException may be thrown		
 		
-		if(helpMode || help_displayEmitters || help_listArguments) //if a help mode was triggered, don't do any work, just alert the caller that some kind of help text should be displayed.
+		if(helpMode || help_displayEmitters) //if a help mode was triggered, don't do any work, just alert the caller that some kind of help text should be displayed.
 			return false;
 		//else: we're not in help mode - go forth and configure the app for the real work
 		
@@ -124,6 +128,10 @@ public class App {
 					(OutputEmitters.get(emitterName)) :
 			        (OutputEmitters.get(OutputEmitters.DEFAULT_EMITTER));
 		}
+		
+		//If we are listing arguments, return false after setting the emitter
+		if(help_listArguments)
+			return false;
 		
 		reader = (inputPath != null) ?
 				(new RpslObjectFileReader(inputPath)) :
@@ -187,12 +195,7 @@ public class App {
 				if(launcher.help_displayEmitters)
 					System.out.println(getAvailableEmitters());
 				if(launcher.help_listArguments){
-					if (launcher.emitter != null) {
-						System.out.println(getEmitterArguments(launcher.emitter));
-					}
-					else {
-						System.out.println("Emitter was not defined, valid arguments cannot be retreived");
-					}
+					printEmitterArguments(launcher.emitter);
 				}
 			}
 		} catch (ParameterException e) {
