@@ -33,7 +33,7 @@ public interface OutputEmitter {
 
 	/**
 	 * Provide a map of valid arguments and their descriptions
-	 * @return map of argument name -> argument description
+	 * @return map of argument name to argument description
 	 */
 	public Map<String, String> validArguments();
 }
