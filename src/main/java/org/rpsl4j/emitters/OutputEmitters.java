@@ -35,7 +35,7 @@ public class OutputEmitters {
         emitterRegistry.clear();
         cps.scan();
 
-        for(String className : cps.getClassesImplementing(OutputEmitter.class)) {
+        for(String className : cps.getNamesOfClassesImplementing(OutputEmitter.class)) {
             try {
                 emitterRegistry.put(className, (Class<OutputEmitter>) Class.forName(className));
             } catch (ClassNotFoundException e) {
