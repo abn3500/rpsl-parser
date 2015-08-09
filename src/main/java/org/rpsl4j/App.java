@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.commons.lang3.StringUtils;
 import org.rpsl4j.emitters.OutputEmitter;
 import org.rpsl4j.emitters.OutputEmitters;
@@ -25,6 +28,7 @@ import com.beust.jcommander.ParameterException;
 public class App {
 
 	public final static String APP_NAME = "rpsl4j-app";
+	final static Logger log = LoggerFactory.getLogger(App.class);
 	
 	//CLI args
 	@Parameter (names = {"-e", "--emitter"}, description = "Emitter to use to format output")
@@ -200,7 +204,7 @@ public class App {
 				}
 			}
 		} catch (ParameterException e) {
-			System.out.println("ERROR parsing app flags/parameters: " + e.getMessage());
+			log.error("Parsing app flags/parameters: {}", e.getMessage());
 			System.out.println(getUsageString());
 			System.exit(1);
 		}

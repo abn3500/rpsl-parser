@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.LinkedHashMultimap;
 import com.google.common.collect.Multimap;
@@ -33,6 +35,7 @@ public class BGPAutNum {
 	private AutNum autNumObject;
 	protected String name;
 	protected long autNum;
+	final static Logger log = LoggerFactory.getLogger(BGPAutNum.class);
 
 	/**
 	 * Maps of (AS-Peer, IP) to [Routes].
@@ -116,7 +119,7 @@ public class BGPAutNum {
 			if(i < (attrAST.size() + 1) &&
 					(!attrAST.get(i+1).getLeft().equals("at") ||
 					 attrAST.get(i+1).getRight().size() != 1)) {
-				System.err.println("Malformed peering specification: " + attr.toString());
+				log.error("Malformed peering specification: {}", attr.toString());
 				continue;
 			}
 
@@ -128,7 +131,7 @@ public class BGPAutNum {
 				AutNum peerAN = AutNum.parse(pairRight.get(0));
 				autNum = peerAN.getValue();
 			} catch (AttributeParseException e) {
-				System.err.println(e.getMessage());
+				log.error(e.getMessage());
 				continue;
 			}
 

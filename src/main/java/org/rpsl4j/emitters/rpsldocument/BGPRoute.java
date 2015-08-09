@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
@@ -29,6 +31,7 @@ import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
 public class BGPRoute {
 	private static final List<String> OPERATORS = Arrays.asList("AND", "OR", "NOT");
 	protected static final String ANY_ADDRESS = "0.0.0.0";
+	final static Logger log = LoggerFactory.getLogger(BGPRoute.class);
 	
 	AddressPrefixRange routePrefixObject;
 	String 	nextHop,
@@ -72,7 +75,7 @@ public class BGPRoute {
 		for(String routeString : routeList) {
 			//If it is an operator, return the empty set as we can't handle it.
 			if(OPERATORS.contains(routeString)) {
-				System.err.println("Filter expressions not currently supported");
+				log.error("Filter expressions not currently supported");
 				return new HashSet<BGPRoute>();
 			}
 			

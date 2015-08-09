@@ -10,6 +10,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import net.ripe.db.whois.common.io.RpslObjectStreamReader;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.ObjectType;
@@ -24,6 +27,8 @@ public class BGPRpslDocument {
 	Set<BGPAutNum> autNumSet = new HashSet<BGPAutNum>();
 	Set<BGPInetRtr> inetRtrSet = new HashSet<BGPInetRtr>();
 	Set<BGPPeer> peerSet = new HashSet<BGPPeer>();
+	
+	final static Logger log = LoggerFactory.getLogger(BGPRpslDocument.class);
 	
 	private Map<String, BGPAutNum> autNumMap = new HashMap<String, BGPAutNum>();
 	
@@ -51,13 +56,13 @@ public class BGPRpslDocument {
     		} catch (NullPointerException | IllegalArgumentException e) {
     			//Object failed to parse, print error with excerpt of object
     			String[] splitObject = stringObject.split("\n");
-    			System.err.println("Unable to parse following object, skipping... ");
+    			log.error("Unable to parse following object, skipping... ");
     			
     			//Print object excerpt
     			for(int i = 0; i < 3 && i < splitObject.length; i++) {
-    				System.err.println(splitObject[i]);
+    				
     				if(i == 2) //We only printed part of the object
-    					System.err.println("...");
+    					log.error("{}...", splitObject[i]);
     			}
     		}
     	}

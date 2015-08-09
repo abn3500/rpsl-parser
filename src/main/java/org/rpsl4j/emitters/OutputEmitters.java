@@ -8,7 +8,11 @@ package org.rpsl4j.emitters;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
+
 import org.rpsl4j.emitters.NullEmitter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.github.lukehutch.fastclasspathscanner.FastClasspathScanner;
 
 /**
@@ -21,6 +25,7 @@ public class OutputEmitters {
 	public static final String DEFAULT_EMITTER = NullEmitter.class.getName();
 	public static final Map<String, Class<OutputEmitter>> emitterRegistry = new HashMap<String, Class<OutputEmitter>>();
     public static final FastClasspathScanner cps = new FastClasspathScanner();
+    final static Logger log = LoggerFactory.getLogger(OutputEmitters.class);
 
 
     static {
@@ -39,7 +44,7 @@ public class OutputEmitters {
             try {
                 emitterRegistry.put(className, (Class<OutputEmitter>) Class.forName(className));
             } catch (ClassNotFoundException e) {
-                System.err.println("Could not add class to emitterRegistry despite being subclass of OutputEmitter");
+                log.error("Could not add class to emitterRegistry despite being subclass of OutputEmitter");
                 e.printStackTrace();
             }
         }
@@ -58,8 +63,7 @@ public class OutputEmitters {
 
         //Check if class exists in registry
         if(!emitterRegistry.containsKey(className)) {
-			System.err.println("Illegal OutputEmitter in OutputEmitters (" +
-							   className + ")");
+			log.error("Illegal OutputEmitter in OutputEmitters ({})", className);
             return get(DEFAULT_EMITTER);
         }
 
@@ -68,8 +72,7 @@ public class OutputEmitters {
 			emitter = emitterRegistry.get(className).newInstance();
 		} catch (InstantiationException | IllegalAccessException | NullPointerException e) {
 			//If we can't instantiate we will return the default emitter
-			System.err.println("Illegal OutputEmitter in OutputEmitters (" +
-							   className + ")");
+			log.error("Illegal OutputEmitter in OutputEmitters ({})", className);
 			e.printStackTrace();
 			emitter = get(DEFAULT_EMITTER);
 		}

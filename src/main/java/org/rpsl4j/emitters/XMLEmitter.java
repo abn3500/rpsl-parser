@@ -26,6 +26,8 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Comment;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -44,14 +46,14 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 public class XMLEmitter implements OutputEmitter {
 
 	private DocumentBuilder docBuilder;
+	final static Logger log = LoggerFactory.getLogger(XMLEmitter.class);
 	
 	public XMLEmitter() {
 		//Get an xml parser instance
 		try {
 			docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
-			System.err.println( "Failed to initialise DocumentBuilder, " + 
-								"Emitter will output nothing.");
+			log.error( "Failed to initialise DocumentBuilder, Emitter will output nothing.");
 			e.printStackTrace();
 		}
 	}
@@ -126,7 +128,7 @@ public class XMLEmitter implements OutputEmitter {
 					attrElement.setTextContent(attrValue.toString());
 				}
 			} catch (IOException e) {
-				System.err.println("Error parsing" + attr.getType().getName() + ", attribute will not be added");
+				log.error("Error parsing {} , attribute will not be added", attr.getType().getName());
 				e.printStackTrace();
 				continue;
 			}
@@ -156,8 +158,7 @@ public class XMLEmitter implements OutputEmitter {
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 		 } catch (TransformerConfigurationException
 				  | TransformerFactoryConfigurationError e) {
-			System.err.println( "Failed to initialise Transformer, " + 
-								"Emitter will output nothing.");
+			log.error( "Failed to initialise Transformer, Emitter will output nothing.");
 			e.printStackTrace();
 			return "";	
 		}
@@ -173,8 +174,7 @@ public class XMLEmitter implements OutputEmitter {
 			transformer.transform(source, destination);
 			return stringWriter.toString();
 		} catch (TransformerException e) {
-			System.err.println( "Failed to transform Document to String, " +
-								"Emitter will output nothing");
+			log.error( "Failed to transform Document to String, Emitter will output nothing");
 			e.printStackTrace();
 			return "";
 		}
