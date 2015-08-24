@@ -17,10 +17,14 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.AttributeType;
+import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
+import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
 import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
+import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 /**
  * BGPRoute represents a route exported by an aut-num to a potential peer.
@@ -38,7 +42,9 @@ public class BGPRoute {
 			routeNetwork;
 	int 	routePrefix;
 	private Map<String, String> actions = new HashMap<String, String>();
-	
+	Set<CIString> parentSets = new HashSet<CIString>(); //route-sets this route (says) it's a member of (no double checking and mbrsByRef validation yet) //TODO
+	long asNumber = -1; //TODO: Should this be here..
+
 	public BGPRoute(AddressPrefixRange routePrefixObject, String nextHop) {
 		this.routePrefixObject = routePrefixObject;
 		this.nextHop = nextHop;
@@ -65,8 +71,8 @@ public class BGPRoute {
 		List<String> routeList = null;
 		for(Pair<String, List<String>> pair : attrAST) {
 			if(pair.getLeft().equals("announce")) {
-					routeList = pair.getRight();
-					break;
+				routeList = pair.getRight();
+				break;
 			}
 		}
 		
@@ -96,6 +102,26 @@ public class BGPRoute {
 		return routes;
 	}
 	
+	/**
+	 * @param object
+	 * throws IllegalArgumentException if the RpslObject passed in isn't a Route object, AttributeParseException if parsing object attributes fails. //TODO: neaten this comment up
+	 */
+	BGPRoute(RpslObject object) {
+		if(object.getType() != ObjectType.ROUTE) throw new IllegalArgumentException("Requires ROUTE object, got " + object.getType());
+
+		this.routePrefixObject = AddressPrefixRange.parse(object.getValueForAttribute(AttributeType.ROUTE));
+		AutNum originAS = AutNum.parse(object.getValueForAttribute(AttributeType.ORIGIN));
+		this.asNumber = originAS.getValue();
+		this.parentSets.addAll(object.getValuesForAttribute(AttributeType.MEMBER_OF)); //may be empty
+
+		//TODO: deal with withdrawn dates. Complicating the problem, AttributeType lists no WITHDRAWN constant.
+		//CIString withdrawnDate = object.getValueOrNullForAttribute(AttributeType.)
+
+		//TODO get prefix etc
+		//asNumber = -1; //cannot possibly be unknown; it's a mandatory attribute, and if we can't parse it we crash out of here with an exception anyway.
+		//parentSets.add(null);
+	}
+
 	@Override
 	public boolean equals(Object other) {
 		if(!(other instanceof BGPRoute)) {

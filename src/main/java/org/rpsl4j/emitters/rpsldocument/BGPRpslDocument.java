@@ -13,6 +13,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
+
+import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.io.RpslObjectStreamReader;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.ObjectType;
@@ -27,13 +31,18 @@ public class BGPRpslDocument {
 	Set<BGPAutNum> autNumSet = new HashSet<BGPAutNum>();
 	Set<BGPInetRtr> inetRtrSet = new HashSet<BGPInetRtr>();
 	Set<BGPPeer> peerSet = new HashSet<BGPPeer>();
-	
+
 	final static Logger log = LoggerFactory.getLogger(BGPRpslDocument.class);
+	
+    //Map<String, RouteSetDepreciated> flattenedRouteSetSet = new HashMap<String, RouteSetDepreciated>();
+    private Multimap<CIString, BGPRoute>	setRoutes	= HashMultimap.create(); //routes by the set(s) they say they are members of (no double checking by listings in rs-set members attribute, and no validation against mbrsByRef maintainers)
+    private Multimap<Long, BGPRoute>		asRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
 	
 	private Map<String, BGPAutNum> autNumMap = new HashMap<String, BGPAutNum>();
 	
 	public BGPRpslDocument(Set<RpslObject> rpslObjects) {
 		this.rpslObjects = rpslObjects;
+		parseRpslRouteObjects();
 	}
 	
 	/**
@@ -69,6 +78,21 @@ public class BGPRpslDocument {
 		
 		return new BGPRpslDocument(rpslObjectSet);
 	}
+	
+	private void parseRpslRouteObjects() {
+		for(RpslObject o : this.rpslObjects) {
+			if(o.getType() != ObjectType.ROUTE)
+				continue; //skip non Route objects
+
+			//parse as BGPRoute, grab key info and add to index
+			BGPRoute bgpRoute = new BGPRoute(o);
+			asRoutes.put(bgpRoute.asNumber, bgpRoute);
+			for(CIString set : bgpRoute.parentSets) {
+				setRoutes.put(set, bgpRoute);
+			}
+		}
+	}
+
 	
 	/**
 	 * Generate or return cached set of {@link BGPAutNum}s declared in rpsl document
