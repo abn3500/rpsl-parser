@@ -63,7 +63,7 @@ public class OutputEmitters {
 
         //Check if class exists in registry
         if(!emitterRegistry.containsKey(className)) {
-			log.error("Illegal OutputEmitter in OutputEmitters ({})", className);
+			log.warn("Illegal OutputEmitter in OutputEmitters ({})", className);
             return get(DEFAULT_EMITTER);
         }
 
@@ -72,7 +72,7 @@ public class OutputEmitters {
 			emitter = emitterRegistry.get(className).newInstance();
 		} catch (InstantiationException | IllegalAccessException | NullPointerException e) {
 			//If we can't instantiate we will return the default emitter
-			log.error("Illegal OutputEmitter in OutputEmitters ({})", className);
+			log.warn("Illegal OutputEmitter in OutputEmitters ({})", className);
 			e.printStackTrace();
 			emitter = get(DEFAULT_EMITTER);
 		}

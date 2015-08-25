@@ -53,9 +53,7 @@ public class XMLEmitter implements OutputEmitter {
 		try {
 			docBuilder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
 		} catch (ParserConfigurationException e) {
-			log.error( "Failed to initialise DocumentBuilder, Emitter will output nothing.");
-			e.printStackTrace();
-		}
+			log.error( "Failed to initialise DocumentBuilder, Emitter will output nothing.");		}
 	}
 	
 	@Override
@@ -128,8 +126,7 @@ public class XMLEmitter implements OutputEmitter {
 					attrElement.setTextContent(attrValue.toString());
 				}
 			} catch (IOException e) {
-				log.error("Error parsing {} , attribute will not be added", attr.getType().getName());
-				e.printStackTrace();
+				log.warn("Error parsing {} , attribute will not be added", attr.getType().getName());
 				continue;
 			}
 			

@@ -131,7 +131,7 @@ public class BGPAutNum {
 				AutNum peerAN = AutNum.parse(pairRight.get(0));
 				autNum = peerAN.getValue();
 			} catch (AttributeParseException e) {
-				log.error(e.getMessage());
+				log.error("Illegal aut-num: {}", pairRight.get(0));
 				continue;
 			}
 

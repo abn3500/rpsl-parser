@@ -56,13 +56,13 @@ public class BGPRpslDocument {
     		} catch (NullPointerException | IllegalArgumentException e) {
     			//Object failed to parse, print error with excerpt of object
     			String[] splitObject = stringObject.split("\n");
-    			log.error("Unable to parse following object, skipping... ");
+    			log.warn("Unable to parse following object, skipping... ");
     			
     			//Print object excerpt
     			for(int i = 0; i < 3 && i < splitObject.length; i++) {
-    				
-    				if(i == 2) //We only printed part of the object
-    					log.error("{}...", splitObject[i]);
+    				  log.error("{}", splitObject[i]);
+    				  if(i == 2 && splitObject.length>3 ) //on last iteration, and there are lines of the object we haven't printed
+    				    log.error("...");
     			}
     		}
     	}
