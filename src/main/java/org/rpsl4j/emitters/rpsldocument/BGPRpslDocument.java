@@ -34,10 +34,14 @@ public class BGPRpslDocument {
 
 	final static Logger log = LoggerFactory.getLogger(BGPRpslDocument.class);
 	
-	//maps of ASs/route-sets routes claim to be members of
-    private Multimap<CIString, BGPRoute>	setRoutes	= HashMultimap.create();
-    private Multimap<Long, BGPRoute>		asRoutes	= HashMultimap.create();
+    //Map<String, RouteSetDepreciated> flattenedRouteSetSet = new HashMap<String, RouteSetDepreciated>();
+    private Multimap<CIString, BGPRoute>	setRoutes	= HashMultimap.create(); //routes by the set(s) they say they are members of (no double checking by listings in rs-set members attribute, and no validation against mbrsByRef maintainers)
+    private Multimap<Long, BGPRoute>		asRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
 	
+    //Maps of route-set/as-set RPSL objects to java representations
+    private Map<String, BGPRpslSet>			routeSets   = new HashMap<>(),
+    										asSets		= new HashMap<>();
+    
 	private Map<String, BGPAutNum> autNumMap = new HashMap<String, BGPAutNum>();
 	
 	public BGPRpslDocument(Set<RpslObject> rpslObjects) {
@@ -92,7 +96,6 @@ public class BGPRpslDocument {
 			}
 		}
 	}
-
 	
 	/**
 	 * Generate or return cached set of {@link BGPAutNum}s declared in rpsl document
@@ -126,12 +129,48 @@ public class BGPRpslDocument {
 			String asNumber = o.getTypeAttribute().getCleanValue().toString();
 			
 			//TODO check and handle case where asNumber is already inserted
-			autNumMap.put(asNumber, new BGPAutNum(o));
+			autNumMap.put(asNumber, new BGPAutNum(o, this));
 		}
 		
 		//cache and return
 		this.autNumMap = autNumMap;
 		return autNumMap;
+	}
+	
+	/**
+	 * Generate or return the BGPRpslSet object representing the route-set of the provided name
+	 * @param setName name of route-set object to retrieve
+	 * @return route-set object or null
+	 */
+	BGPRpslSet getRouteSet(String setName) {
+		//Initialise routeSet mapping if empty
+		if(routeSets.size() != 0) {
+			for(RpslObject o : this.rpslObjects) {
+				if(o.getType() != ObjectType.ROUTE_SET)
+					continue;
+				//TODO construct routeset object and add to routeSets
+			}
+		}
+		
+		return routeSets.get(setName);
+	}
+	
+	/**
+	 * Generate or return the BGPRpslSet object representing the as-set of the provided name
+	 * @param setName name of as-set object to retrieve
+	 * @return as-set object or null
+	 */
+	BGPRpslSet getASSet(String setName) {
+		//Initialise routeSet mapping if empty
+		if(routeSets.size() != 0) {
+			for(RpslObject o : this.rpslObjects) {
+				if(o.getType() == ObjectType.AS_SET)
+					continue;
+				//TODO construct asSet object and add to asSets
+			}
+		}
+		
+		return asSets.get(setName);
 	}
 	
 	/**
@@ -182,5 +221,20 @@ public class BGPRpslDocument {
 		//cache and return
 		this.peerSet = peerSet;
 		return peerSet;
+	}
+	
+	/**
+	 * Return a copy of the {@link BGPRoute}s of a particular autnum; declared as RPSL Route objects.
+	 * @param autNum autnum to query routes from
+	 * @return copy of autnum's routes
+	 */
+	public Set<BGPRoute> getASRoutes(long autNum) {
+		Set<BGPRoute> routeSet = new HashSet<>();
+		//Check if AS has declared route objects
+		if(asRoutes.containsKey(autNum)) {
+			for(BGPRoute r : asRoutes.get(autNum))
+				routeSet.add(new BGPRoute(r));
+		}
+		return routeSet;
 	}
 }

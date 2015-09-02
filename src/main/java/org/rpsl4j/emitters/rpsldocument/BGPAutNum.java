@@ -33,6 +33,7 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 public class BGPAutNum {
 	private RpslObject rpslObject;
 	private AutNum autNumObject;
+	private BGPRpslDocument parentDocument;
 	protected String name;
 	protected long autNum;
 	final static Logger log = LoggerFactory.getLogger(BGPAutNum.class);
@@ -47,7 +48,7 @@ public class BGPAutNum {
 	 * Initialise a new BGPAutNum instance and generate its route maps
 	 * @param object aut-num RPSL object
 	 */
-	public BGPAutNum(RpslObject object) {
+	public BGPAutNum(RpslObject object, BGPRpslDocument doc) {
 		//Sanity check the provided object
 		if(object.getType() != ObjectType.AUT_NUM) throw new IllegalArgumentException("Requires AUT_NUM object, got " + object.getType());
 		rpslObject = object;
@@ -58,9 +59,16 @@ public class BGPAutNum {
 
 		//Again, this is a mandatory attribute, assume it exists
 		name = rpslObject.getValueForAttribute(AttributeType.AS_NAME).toString();
+		
+		//Add a reference to the parent document. Could be null.
+		parentDocument = doc;
 
 		//Jump into building the route maps
 		generateRouteMaps();
+	}
+	
+	public BGPAutNum(RpslObject object) {
+		this(object, null);
 	}
 
 	/**
@@ -83,9 +91,9 @@ public class BGPAutNum {
 				Map<String, String> routeActions = resolveActions(attr, exportPeer);
 				
 				if(routeActions.size() == 0)				
-					includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight()));
+					includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight(), parentDocument));
 				else
-					includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight(), routeActions));
+					includedRouteMap.putAll(exportPeer.getLeft(), BGPRoute.resolveRoutes(attr, exportPeer.getRight(), parentDocument, routeActions));
 			}
 		}
 
