@@ -110,16 +110,11 @@ public class BGPRoute {
 		if(object.getType() != ObjectType.ROUTE) throw new IllegalArgumentException("Requires ROUTE object, got " + object.getType());
 
 		this.routePrefixObject = AddressPrefixRange.parse(object.getValueForAttribute(AttributeType.ROUTE));
-		AutNum originAS = AutNum.parse(object.getValueForAttribute(AttributeType.ORIGIN));
-		this.asNumber = originAS.getValue();
-		this.parentSets.addAll(object.getValuesForAttribute(AttributeType.MEMBER_OF)); //may be empty
+		this.asNumber = AutNum.parse(object.getValueForAttribute(AttributeType.ORIGIN)).getValue();
+		this.parentSets.addAll(object.getValuesForAttribute(AttributeType.MEMBER_OF));
 
 		//TODO: deal with withdrawn dates. Complicating the problem, AttributeType lists no WITHDRAWN constant.
 		//CIString withdrawnDate = object.getValueOrNullForAttribute(AttributeType.)
-
-		//TODO get prefix etc
-		//asNumber = -1; //cannot possibly be unknown; it's a mandatory attribute, and if we can't parse it we crash out of here with an exception anyway.
-		//parentSets.add(null);
 	}
 
 	@Override
