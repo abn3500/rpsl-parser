@@ -32,7 +32,7 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
  * however it does not support filter expressions as of yet (AND/OR/NOT etc).
  * @author Benjamin George Roberts
  */
-public class BGPRoute implements Cloneable {
+public class BGPRoute {
 	private static final List<String> OPERATORS = Arrays.asList("AND", "OR", "NOT");
 	protected static final String ANY_ADDRESS = "0.0.0.0";
 	final static Logger log = LoggerFactory.getLogger(BGPRoute.class);

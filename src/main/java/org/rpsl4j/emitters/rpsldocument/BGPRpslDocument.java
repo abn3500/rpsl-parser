@@ -34,7 +34,6 @@ public class BGPRpslDocument {
 
 	final static Logger log = LoggerFactory.getLogger(BGPRpslDocument.class);
 	
-    //Map<String, RouteSetDepreciated> flattenedRouteSetSet = new HashMap<String, RouteSetDepreciated>();
     private Multimap<CIString, BGPRoute>	setRoutes	= HashMultimap.create(); //routes by the set(s) they say they are members of (no double checking by listings in rs-set members attribute, and no validation against mbrsByRef maintainers)
     private Multimap<Long, BGPRoute>		asRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
 	
