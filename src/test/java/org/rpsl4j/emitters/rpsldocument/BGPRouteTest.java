@@ -76,5 +76,12 @@ public class BGPRouteTest {
 		assertNotEquals(route, routeDifferentNetwork);
 		assertNotEquals(route, routeDifferentNextHop);
 	}
+	
+	@Test
+	public void testCopyConstructor() {
+		BGPRoute route = new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), "1.1.1.1");
+		assertEquals("Copy constructor should return equal object", route, new BGPRoute(route));
+		//TODO test route-object/action constructors
+	}
 
 }
