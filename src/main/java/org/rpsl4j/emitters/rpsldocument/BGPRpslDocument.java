@@ -21,6 +21,9 @@ import net.ripe.db.whois.common.io.RpslObjectStreamReader;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslObject;
+import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
+import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
+import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 public class BGPRpslDocument {
 
@@ -38,7 +41,7 @@ public class BGPRpslDocument {
     private Multimap<Long, BGPRpslRoute>		asRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
 	
     //Maps of route-set/as-set RPSL objects to java representations
-    private Map<String, BGPRpslSet>			routeSets   = new HashMap<>(),
+    private Map<CIString, BGPRpslSet>		routeSets   = new HashMap<>(),
     										asSets		= new HashMap<>();
     
 	private Map<String, BGPAutNum> autNumMap = new HashMap<String, BGPAutNum>();
@@ -152,10 +155,142 @@ public class BGPRpslDocument {
 				if(o.getType() != ObjectType.ROUTE_SET)
 					continue;
 				//TODO construct routeset object and add to routeSets
-			}
-		}
+				
+				//add routeset name to index if it doesn't exist. Get routeset object from mapping, fill in members as either route objects, as or route-set references (creating entries in route-set and as-set indexes if they don't already exist)
+				CIString currentRSName = o.getValueForAttribute(AttributeType.ROUTE_SET);
+				BGPRpslSet currentRS = addOrGetSetByName(currentRSName); //assuming here that the name starts with 'rs-', which it should given this is a route-set
+				
+				//can both be empty sets
+				Set<CIString> membersStr = o.getValuesForAttribute(AttributeType.MEMBERS);
+				Set<CIString> mbrsByRefStr = o.getValuesForAttribute(AttributeType.MBRS_BY_REF);
+				
+				Set<CIString> processedRoutes = new HashSet<CIString>();
+				Set<CIString> withdrawnRoutes = new HashSet<CIString>();
+				
+				//early thinking:
+				//check for Route objects that can become members of this set.. for those that can't.. we want to know if they are already explicitly members, in which case we add them.. else we should remove them from the mapping of setRoutes. Later, if we find a member route that matches a Route object we added earlier, we should skip adding that (minimal) version of the route.
+				
+				//for all routes that claim membership in this set
+				for(BGPRoute route : setRoutes.get(currentRSName)) {
+					
+					//check if route expired TODO
+//					if(route.isWithdrawn()) {
+//						withdrawnRoutes.add(CIString.ciString(route.routePrefixObject.toString()));
+//						continue;
+//					}
+						
+					
+					//check if that route already has explicit membership
+					CIString routeSting = CIString.ciString(route.routePrefixObject.toString().toLowerCase().trim()); //perhaps some redundant string cleaning there..
+					if(membersStr.contains(routeSting)) { //already an explicit member
+						currentRS.addMember(new BGPSetMember(route));
+						processedRoutes.add(routeSting); //note that this member has already been processed //TODO: could perhaps just remove from members list (only issue there is if we see duplicate routes here)
+						continue;
+					}
+					
+					//check maintainers
+					if(mbrsByRefStr.contains("ANY")) { //if all membership requests granted regardless of maintainer
+						currentRS.addMember(new BGPSetMember(route));
+						continue;
+					}
+					
+					//figure out who the route's maintainers are.. hmm TODO:
+					currentRS.addMember(new BGPSetMember(route));
+					System.out.println("WARNING: Filtering addition of routes to route-sets based on maintainers is unsupported. The route '" + route + "' has been added without this check");
+				}
+				
+				//all explicitly listed members
+				for(CIString memberStr : membersStr) {
+					memberStr = CIString.ciString(memberStr.toLowerCase().trim()); //clean input
+					
+					//make sure this isn't a route we've already added a *proper* Route object for..
+					if(processedRoutes.contains(memberStr))
+						continue;
+					
+					//or that we found an expired Route object for.. the latter is an interesting case; should the route always be explicitly allowed because it's a member, or should we assume that the Route object is giving extra info, so use it's withdrawn date..
+					if(withdrawnRoutes.contains(memberStr)) //TODO
+						continue;
+					
+					CIString postFix = null;
+					CIString memberWithoutPostfix = memberStr;
+					if(memberStr.contains("^")) { //look for postfix
+						String s = memberStr.toString();
+						int prefixStartIndex = s.indexOf('^');
+						postFix = CIString.ciString(s.substring(prefixStartIndex));
+						System.out.println("DEBUG: postfix read as:" + postFix); //TODO:
+						memberWithoutPostfix = CIString.ciString(s.substring(0, prefixStartIndex));
+						System.out.println("DEBUG: member name read as:" + memberWithoutPostfix); //TODO:
+					}
+
+					try{
+						BGPRpslSet referencedSet = addOrGetSetByName(memberWithoutPostfix); //try to parse member as route-set or as-set reference
+						//if(set!=null) //TODO: this check depends on how we error out of the above method call
+						currentRS.addMember(new BGPSetMember(referencedSet, postFix));
+						continue;
+					} catch (IllegalArgumentException e) { //didn't begin with as- or rs-
+						//TODO
+					}
+					
+					//parsing as a set reference failed. Try parsing as a route
+					try {
+						AddressPrefixRange addr = AddressPrefixRange.parse(memberStr); //include postfix this time; AddressPrefixRange knows exactly what to do with it
+						BGPRoute route = new BGPRoute(addr, null); //nexthop unknown.. and we are adding a route we didn't find a corresponding Route object for. Issue a warning
+						System.out.println("WARNING: " + currentRSName + " contains a member route (" + addr + ") with no corresponding Route object. This route has been maintained.");
+						currentRS.addMember(new BGPSetMember(route));
+						continue;
+					} catch (AttributeParseException e) {
+						//TODO
+					}
+					
+					//not a set reference or a route. Could still be an AS
+					try { //can we have AS1^+ ?? better safe than sorry.. //TODO
+						AutNum as = AutNum.parse(memberWithoutPostfix);
+						currentRS.addMember(new BGPSetMember(as, postFix));
+						System.out.println("DEBUG: added AS member to set '" + currentRSName + "': " + as + " with postfix: " + postFix);
+						continue;
+					} catch (AttributeParseException e) {
+						
+					}
+					
+					//shit happened
+					System.out.println("DEBUG: shit happens");
+					
+				} //end for (route-set members)
+			
+				routeSets.put(currentRSName, currentRS);
+			} //end for (route set)
+			
+		} //end if (routeSets empty)
 		
 		return routeSets.get(setName);
+	}
+	
+	/**
+	 * Get set reference by name (to allow references to *other* sets to be inserted as members of a set)
+	 * @param name
+	 * @return
+	 */
+	private BGPRpslSet addOrGetSetByName(CIString name) {
+		if(name.startsWith("rs-")) { //approach 1
+			if(routeSets.containsKey(name))
+				return routeSets.get(name);
+			else {
+				BGPRpslSet tempSet = new BGPRouteSet(name);
+				routeSets.put(name, tempSet);
+				return tempSet;
+			}
+		}
+		else if(name.startsWith("as-")) { //approach 2; neater, but perhaps slightly less efficient (saves on a memory allocation though)
+			if(asSets.containsKey(name))
+				asSets.put(name, new BGPAsSet(name));
+			
+			return asSets.get(name);
+		} else {
+			//TODO: complain
+			throw new IllegalArgumentException("Recieved unsupported rpsl set prefix; only 'rs-' and 'as-' are currently supported");
+		}
+			
+			
 	}
 	
 	/**

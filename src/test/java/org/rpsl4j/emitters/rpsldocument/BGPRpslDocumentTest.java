@@ -7,9 +7,14 @@ package org.rpsl4j.emitters.rpsldocument;
 
 import static org.junit.Assert.*;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
+import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.io.RpslObjectStringReader;
+import net.ripe.db.whois.common.rpsl.ObjectType;
+import net.ripe.db.whois.common.rpsl.RpslObject;
 
 import org.junit.Test;
 
@@ -36,6 +41,25 @@ public class BGPRpslDocumentTest {
 			+ "export: to AS3 2.2.2.1 at 1.1.1.1 announce AS1\n\n"
 			+ "route: 1.1.1.0/24\n"
 			+ "origin: AS1\n";
+	
+	
+	//route and route-set
+	private final String ROUTE_OBJECTS =  "route: 2.1.1.1/8\n"
+			+ "origin: AS1\n"
+			+ "withdrawn: 20151231\n" //dec 31st, 2015
+			+ "member-of: rs-foo, rs-bar\n"
+			+ "\n"
+			+ "route: 1.1.1.0/24\n"
+			+ "origin: AS1\n"
+			+ "member-of: rs-bar\n";
+	
+	private final String ROUTE_SETS =  "route-set: rs-foo\n"
+			+ "members: 2.1.1.1/8, 10.0.0.0/8^16-24, rs-bar, rs-blah^+, AS5^+\n"
+			+ "\n"
+			+ "route-set: rs-bar\n"
+			+ "mbrs-by-ref: ANY\n"
+			+ "\n";
+	
 
 	BGPRpslDocument doc;
 
@@ -74,7 +98,7 @@ public class BGPRpslDocumentTest {
 		assertTrue("Peer route table should contain route with origin AS1", 
 				autNum.getTableForPeer(3, "2.2.2.1").routeSet.size() == 1);
 	}
-	
+
 	@Test
 	public void dropWithdrawnRoute() {
 		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(

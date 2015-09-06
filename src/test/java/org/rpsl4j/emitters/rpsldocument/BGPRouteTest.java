@@ -84,4 +84,33 @@ public class BGPRouteTest {
 		assertTrue("Clone should return new object", route != route.clone());
 		//TODO test route-object/action constructors
 	}
+	
+	@Test
+	public void applyPostfix() {
+		AddressPrefixRange addr1 = AddressPrefixRange.parse("1.1.1.1/8^+");
+		AddressPrefixRange addr2 = AddressPrefixRange.parse("1.1.1.1/16^16-24");
+		
+		String newPostfix1 = "^20-32";
+		String newPostfix2 = "^+";
+		String tooShortPostfix = "^12-32"; //should be constrained to 16-32; not drop to 12
+		String latterTooSmall = "^10-12";
+		
+		
+		BGPRoute r1 = new BGPRoute(addr1, null);
+		BGPRoute r2 = new BGPRoute(addr2, null);
+		
+		BGPRoute edit1 = r1.clone();
+		edit1.appendPostfix(newPostfix1);
+		BGPRoute edit2 = r2.clone();
+		edit2.appendPostfix(tooShortPostfix);
+		BGPRoute edit3 = r2.clone();
+		edit3.appendPostfix(latterTooSmall);
+		
+		
+		System.out.println(edit1.routePrefixObject);
+		System.out.println(edit2.routePrefixObject);
+		System.out.println(edit3.routePrefixObject);
+		
+	}
+
 }
