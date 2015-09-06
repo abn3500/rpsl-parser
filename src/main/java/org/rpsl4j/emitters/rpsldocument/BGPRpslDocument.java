@@ -89,6 +89,10 @@ public class BGPRpslDocument {
 
 			//parse as BGPRoute, grab key info and add to index
 			BGPRpslRoute bgpRoute = new BGPRpslRoute(o);
+			
+			if(bgpRoute.isWithdrawn())
+				continue;
+			
 			asRoutes.put(bgpRoute.asNumber, bgpRoute);
 			for(CIString set : bgpRoute.parentSets) {
 				setRoutes.put(set, bgpRoute);
