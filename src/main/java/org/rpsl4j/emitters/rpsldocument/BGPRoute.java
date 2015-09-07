@@ -17,11 +17,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.AttributeType;
-import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
-import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
 import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
 import net.ripe.db.whois.common.rpsl.attrs.AutNum;
@@ -32,7 +29,7 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
  * however it does not support filter expressions as of yet (AND/OR/NOT etc).
  * @author Benjamin George Roberts
  */
-public class BGPRoute {
+public class BGPRoute implements Cloneable {
 	private static final List<String> OPERATORS = Arrays.asList("AND", "OR", "NOT");
 	protected static final String ANY_ADDRESS = "0.0.0.0";
 	final static Logger log = LoggerFactory.getLogger(BGPRoute.class);
@@ -42,8 +39,6 @@ public class BGPRoute {
 			routeNetwork;
 	int 	routePrefix;
 	private Map<String, String> actions = new HashMap<String, String>();
-	Set<CIString> parentSets = new HashSet<CIString>(); //route-sets this route (says) it's a member of (no double checking and mbrsByRef validation yet) //TODO
-	long asNumber = -1; //TODO: Should this be here..
 
 	public BGPRoute(AddressPrefixRange routePrefixObject, String nextHop) {
 		this.routePrefixObject = routePrefixObject;
@@ -123,32 +118,13 @@ public class BGPRoute {
 	static Set<BGPRoute> resolveRoutes(RpslAttribute exportAttr, String localRouter) {
 		return resolveRoutes(exportAttr, localRouter, null);
 	}
-
 	
-	/**
-	 * @param object
-	 * throws IllegalArgumentException if the RpslObject passed in isn't a Route object, AttributeParseException if parsing object attributes fails. //TODO: neaten this comment up
-	 */
-	BGPRoute(RpslObject object) {
-		if(object.getType() != ObjectType.ROUTE) throw new IllegalArgumentException("Requires ROUTE object, got " + object.getType());
-
-		this.routePrefixObject = AddressPrefixRange.parse(object.getValueForAttribute(AttributeType.ROUTE));
-		this.asNumber = AutNum.parse(object.getValueForAttribute(AttributeType.ORIGIN)).getValue();
-		this.parentSets.addAll(object.getValuesForAttribute(AttributeType.MEMBER_OF));
-
-		//TODO: deal with withdrawn dates. Complicating the problem, AttributeType lists no WITHDRAWN constant.
-		//CIString withdrawnDate = object.getValueOrNullForAttribute(AttributeType.)
-	}
-	
-	/**
-	 * Copy constructor for BGPRoute
-	 * @param r route to copy
-	 */
-	BGPRoute(BGPRoute r) {
-		this(r.routePrefixObject, r.nextHop);
-		setActions(r.actions);
-		asNumber = r.asNumber;
-		parentSets.addAll(r.parentSets);
+	@Override
+	public BGPRoute clone() {
+		BGPRoute clone = null;
+		try { clone = (BGPRoute) super.clone(); } catch (CloneNotSupportedException e) {/*UNREACHABLE*/}
+		clone.setActions(actions);
+		return clone;
 	}
 
 	@Override
@@ -157,7 +133,14 @@ public class BGPRoute {
 			return false;
 		} else {
 			BGPRoute otherRoute = (BGPRoute) other;
-			return nextHop.equals(otherRoute.nextHop) && routePrefix == otherRoute.routePrefix && routeNetwork.equals(otherRoute.routeNetwork);
+			
+			//handle case where nextHop is null 
+			if((nextHop == null || otherRoute.nextHop == null) && nextHop != otherRoute.nextHop)
+				return false;
+			else if ((nextHop != null && otherRoute.nextHop != null) && !nextHop.equals(otherRoute.nextHop))
+				return false;
+			
+			return routePrefix == otherRoute.routePrefix && routeNetwork.equals(otherRoute.routeNetwork);
 		}
 	}
 	

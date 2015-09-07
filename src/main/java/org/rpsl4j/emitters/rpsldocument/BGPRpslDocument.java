@@ -34,8 +34,8 @@ public class BGPRpslDocument {
 
 	final static Logger log = LoggerFactory.getLogger(BGPRpslDocument.class);
 	
-    private Multimap<CIString, BGPRoute>	setRoutes	= HashMultimap.create(); //routes by the set(s) they say they are members of (no double checking by listings in rs-set members attribute, and no validation against mbrsByRef maintainers)
-    private Multimap<Long, BGPRoute>		asRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
+    private Multimap<CIString, BGPRpslRoute>	setRoutes	= HashMultimap.create(); //routes by the set(s) they say they are members of (no double checking by listings in rs-set members attribute, and no validation against mbrsByRef maintainers)
+    private Multimap<Long, BGPRpslRoute>		asRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
 	
     //Maps of route-set/as-set RPSL objects to java representations
     private Map<String, BGPRpslSet>			routeSets   = new HashMap<>(),
@@ -88,7 +88,7 @@ public class BGPRpslDocument {
 				continue; //skip non Route objects
 
 			//parse as BGPRoute, grab key info and add to index
-			BGPRoute bgpRoute = new BGPRoute(o);
+			BGPRpslRoute bgpRoute = new BGPRpslRoute(o);
 			asRoutes.put(bgpRoute.asNumber, bgpRoute);
 			for(CIString set : bgpRoute.parentSets) {
 				setRoutes.put(set, bgpRoute);
@@ -232,7 +232,7 @@ public class BGPRpslDocument {
 		//Check if AS has declared route objects
 		if(asRoutes.containsKey(autNum)) {
 			for(BGPRoute r : asRoutes.get(autNum))
-				routeSet.add(new BGPRoute(r));
+				routeSet.add(r.clone());
 		}
 		return routeSet;
 	}

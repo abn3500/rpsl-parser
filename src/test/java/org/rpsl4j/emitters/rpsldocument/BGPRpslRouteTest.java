@@ -1,0 +1,31 @@
+/*
+ * Copyright (c) 2015 Benjamin Roberts, Nathan Kelly, Andrew Maxwell
+ * All rights reserved.
+ */
+
+package org.rpsl4j.emitters.rpsldocument;
+
+import static org.junit.Assert.*;
+
+import org.junit.Test;
+
+import net.ripe.db.whois.common.rpsl.RpslObject;
+
+public class BGPRpslRouteTest {
+	private final BGPRpslRoute routeOne = new BGPRpslRoute(RpslObject.parse("route: 1.1.1.0/24\norigin: AS1")),
+							 routeTwo = new BGPRpslRoute(RpslObject.parse("route: 1.1.2.0/24\norigin: AS2"));
+
+	
+	@Test
+	public void testClone() {
+		assertEquals("Clone should return equal object", routeOne, routeOne.clone());
+		assertTrue("Clone should return new object", routeOne != routeOne.clone());
+	}
+	
+	@Test
+	public void testEquality() {
+		assertTrue("Cloned object should be equal to original", routeOne.equals(routeOne.clone()));
+		assertFalse("Different objects should not be equal", routeOne.equals(routeTwo));
+	}
+	
+}
