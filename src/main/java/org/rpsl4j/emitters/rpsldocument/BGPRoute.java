@@ -17,6 +17,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
@@ -130,45 +131,66 @@ public class BGPRoute implements Cloneable {
 	
 	
 	/**
-	 * Clones this object and applies the given postfix
-	 * If a postfix already exists, it is combined with the new one as per the spec: https://tools.ietf.org/html/rfc2622#page-6
-	 * @param prefixOperator rpsl route prefix operator
+	 * Applies the given postfix to this object, combining it with any existing prefix.
+	 * As per: https://tools.ietf.org/html/rfc2622#page-6
+	 * @param newPrefix rpsl route prefix operator
 	 */
-	public void appendPostfix(String prefixOperator) {
-		String addrStr = routePrefixObject.toString().trim();
+	public void appendPostfix(String newPrefix) {
+		String addrStr = routePrefixObject.toString().trim(); //extract current route string including prefix if present
 		
-		if(!addrStr.contains("^")) //no existing prefix
-			addrStr+=prefixOperator;
+		Pair<String, String> existingRouteAndPrefix = BGPRpslSet.splitPrefix(addrStr);
+		String existingRoute = existingRouteAndPrefix.getLeft();
+		String existingPrefix = existingRouteAndPrefix.getRight();
+		
+		String newPrefixedRoute;
+		
+		if(existingPrefix==null) //no prefix
+			newPrefixedRoute = existingRoute + newPrefix; //apply new prefix directly
 		else {
-			//a range applied to a set with existing ranges in it has the effect of bounding the address by the new range, with the exception that the lower bound can only move up.
-			//if we had {innerAddress^i1-i2}^o1-o2, we would get innerAddress^max(i1, 01)-o2 - if 02 isn't greater or equal to max(i1, o1), the postfix is removed completely.. erm, that latter bit seems more iffy - but then, the address mask is still there, we're just removing the ability to specify additional addresses at all.. so I guess the result of closing it off too much win contradictory prefixes is that it has no viable prefix left.. right
-
-			//extract existing
-			//String origPostfix = addrStr.substring(addrStr.lastIndexOf('^'));
+			//calculate new prefix - format is ^n-m (counter intuitively)
+			int currentN = routePrefixObject.getRangeOperation().getN(); 
 			
-			RangeOperation ro = routePrefixObject.getRangeOperation();
-			int previousN = ro.getN(); //format is ^n-m (counter intuitively)
-			int previousM = ro.getM();
+			RangeOperation newPrefix_RangeOperation = RangeOperation.parse(newPrefix, 0, 32); //TODO Maxing at 32bit for ipv4
+			int newN = newPrefix_RangeOperation.getN();
+			int newM = newPrefix_RangeOperation.getM();
 			
-			RangeOperation ro2 = RangeOperation.parse(prefixOperator, 0, 32); //TODO: ensure getPrefixLength() is reliable enough to use here. Maxing at 32bit for ipv4
-			int newN = ro2.getN();
-			int newM = ro2.getM();
+			int maxN = Math.max(currentN, newN);
 			
-			int maxN = Math.max(previousN, newN);
-			
-			addrStr = addrStr.substring(0, addrStr.lastIndexOf('^')); //strip existing prefix
-			if (!(maxN <= newM)) { //prefix is invalidated by addition. Return clean address
-				log.debug("stripped prefix. New address string: " + addrStr);
-			}
-			else {
-				//prefix is now ^maxN-newM
-				addrStr+= "^"+maxN+"-"+newM;
-			}
+			if (!(maxN <= newM)) //New prefix is going backwards (eg 1.1.1.1/8^16-15). As per spec, strip prefix altogether.
+				newPrefixedRoute = existingRoute;
+			else
+				newPrefixedRoute = existingRoute + "^"+maxN+"-"+newM;
 		}
-		
-		routePrefixObject = AddressPrefixRange.parse(addrStr);
+
+		//reconstruct route prefix object with new prefix
+		routePrefixObject = AddressPrefixRange.parse(newPrefixedRoute);
 		routeNetwork = routePrefixObject.getIpInterval().beginAsInetAddress().getHostAddress();
 		routePrefix = routePrefixObject.getIpInterval().getPrefixLength();
+		
+		
+//		if(!addrStr.contains("^")) //no existing prefix
+//			addrStr+=prefixOperator;
+//		else {
+//			//a range applied to a set with existing ranges in it has the effect of bounding the address by the new range, with the exception that the lower bound can only move up.
+//			//if we had {innerAddress^i1-i2}^o1-o2, we would get innerAddress^max(i1, 01)-o2 - if 02 isn't greater or equal to max(i1, o1), the postfix is removed completely.. erm, that latter bit seems more iffy - but then, the address mask is still there, we're just removing the ability to specify additional addresses at all.. so I guess the result of closing it off too much win contradictory prefixes is that it has no viable prefix left.. right
+//
+//			//extract existing
+//			//String origPostfix = addrStr.substring(addrStr.lastIndexOf('^'));
+//			
+//			
+//			//int previousM = ro.getM(); //not needed
+//			
+//			
+//			
+//			addrStr = addrStr.substring(0, addrStr.lastIndexOf('^')); //strip existing prefix
+//			if (!(maxN <= newM)) { //prefix is invalidated by addition. Return clean address
+//				log.debug("stripped prefix. New address string: " + addrStr);
+//			}
+//			else {
+//				//prefix is now ^maxN-newM
+//				addrStr+= "^"+maxN+"-"+newM;
+//			}
+//		}
 	}
 
 	@Override

@@ -8,6 +8,8 @@ package org.rpsl4j.emitters.rpsldocument;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslObject;
@@ -36,6 +38,21 @@ public abstract class BGPRpslSet {
 			members = setObject.getValuesForAttribute(AttributeType.MEMBERS);
 		if(setObject.containsAttribute(AttributeType.MBRS_BY_REF))
 			mbrsByRef = setObject.getValuesForAttribute(AttributeType.MBRS_BY_REF);
+	}
+	
+	
+	/**
+	 * Separate address prefix (eg. '^+') from referenced route-set, as-set or AS
+	 * @param referencedObject
+	 * @return A pair of: (referenced item, prefix or null)
+	 */
+	public static Pair<String, String> splitPrefix(String referencedObject) {
+		String s = referencedObject.toString(); //TODO Make sure this data has been cleaned
+		int prefixStartIndex = s.lastIndexOf('^');
+		if(prefixStartIndex==-1) //no prefix
+			return Pair.of(referencedObject, null);
+		else
+			return Pair.of(s.substring(0, prefixStartIndex), s.substring(prefixStartIndex));
 	}
 	
 	/**

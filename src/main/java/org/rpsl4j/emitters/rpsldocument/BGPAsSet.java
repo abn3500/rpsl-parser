@@ -3,6 +3,7 @@ package org.rpsl4j.emitters.rpsldocument;
 import java.util.Set;
 
 import net.ripe.db.whois.common.domain.CIString;
+import net.ripe.db.whois.common.rpsl.RpslObject;
 
 public class BGPAsSet extends BGPRpslSet {
 
@@ -12,8 +13,8 @@ public class BGPAsSet extends BGPRpslSet {
 		return null;
 	}
 	
-	protected BGPAsSet(CIString name) {
-		super(name);
+	protected BGPAsSet(RpslObject rpslObject) {
+		super(rpslObject);
 	}
 
 }
