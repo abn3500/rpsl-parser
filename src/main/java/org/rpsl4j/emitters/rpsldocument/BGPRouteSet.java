@@ -24,6 +24,9 @@ public class BGPRouteSet extends BGPRpslSet {
 			String postfix;
 			if(m.type==BGPSetMember.SET) {
 				//flatten set, then decide if it's contents need their postfixes updating
+				//that set might be an as-set..!!
+				if(m.referencedSet.name.startsWith("as-"))
+					System.err.println("Pulling routes via as-sets not yet supported");
 				Set<BGPRoute> nestedSetRoutes = m.referencedSet.resolve(parentRpslDocument, visitedNodes);
 				
 				if(m.getReferencedSetPostFix() == null) { //no postfix to apply
