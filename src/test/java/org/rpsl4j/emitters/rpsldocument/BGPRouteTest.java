@@ -84,5 +84,4 @@ public class BGPRouteTest {
 		assertTrue("Clone should return new object", route != route.clone());
 		//TODO test route-object/action constructors
 	}
-
 }
