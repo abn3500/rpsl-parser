@@ -9,6 +9,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 import net.ripe.db.whois.common.domain.CIString;
+import net.ripe.db.whois.common.rpsl.AttributeType;
+import net.ripe.db.whois.common.rpsl.RpslObject;
+import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
 import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 /**
@@ -17,9 +20,23 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
  */
 public abstract class BGPRpslSet {
 	
-	CIString name;
-	Set<BGPSetMember> members = new HashSet<BGPSetMember>();
-	Set<CIString> mbrsByRef = new HashSet<CIString>();
+	//TODO add slf4j logger
+	
+	protected final CIString name;
+	protected Set<CIString> members = new HashSet<CIString>();
+	protected Set<CIString> mbrsByRef = new HashSet<CIString>();
+
+	/**
+	 * Build set object and extract names of member sets etc.
+	 */
+	public BGPRpslSet(RpslObject setObject) {
+		name = setObject.getTypeAttribute().getCleanValue();
+		
+		if(setObject.containsAttribute(AttributeType.MEMBERS))
+			members = setObject.getValuesForAttribute(AttributeType.MEMBERS);
+		if(setObject.containsAttribute(AttributeType.MBRS_BY_REF))
+			mbrsByRef = setObject.getValuesForAttribute(AttributeType.MBRS_BY_REF);
+	}
 	
 	/**
 	 * Recursively resolve the set of BGPRoute objects contained within this set
@@ -34,10 +51,38 @@ public abstract class BGPRpslSet {
 	 * @param visitedNodes Set of nodes that have already been resolved
 	 * @return clone of {@link BGPRoute} objects contained by set
 	 */
-	protected abstract Set<BGPRoute> resolve(BGPRpslDocument parentRpslDocument, Set<BGPRpslSet> visitedNodes);
-	
-	
-	
+	protected Set<BGPRoute> resolve(BGPRpslDocument parentRpslDocument, Set<BGPRpslSet> visitedNodes) {
+		HashSet<BGPRoute> flattenedRoutes = new HashSet<BGPRoute>();
+		
+		if (visitedNodes.contains(this)) //ensure we're not retracing our footsteps
+			return flattenedRoutes;
+		visitedNodes.add(this); //add this set to the index
+		
+		for(CIString member : members) {
+			//Test if member is a as-set
+			if(member.startsWith("as-"))  {
+				BGPRpslSet memberSetObject = parentRpslDocument.asSets.get(member);
+				Set<BGPRoute> resolvedRoutes = memberSetObject.resolve(parentRpslDocument, visitedNodes);
+				//TODO Apply prefix operation to these routes without clone
+				flattenedRoutes.addAll(resolvedRoutes);
+			} else {
+				//Try resolve it as an AS
+				try {
+					AutNum autNum = AutNum.parse(member);
+					Set<BGPRoute> resolvedRoutes = parentRpslDocument.getASRoutes(autNum.getValue());
+					//TODO Apply prefix operation to these routes without clone
+					flattenedRoutes.addAll(resolvedRoutes);
+				} catch(AttributeParseException e) {}
+			}
+				
+		}
+		
+		
+		//Remove ourselves from visitors so set specific code can run
+		visitedNodes.remove(this);
+		
+		return flattenedRoutes;
+	}
 	
 //	protected static Set<BGPSetMember> applyPostfix(Set<BGPSetMember> members , CIString postfix) {
 //		HashSet<BGPSetMember> processedMembers = new HashSet<BGPSetMember>();
@@ -57,14 +102,10 @@ public abstract class BGPRpslSet {
 //		return processedMembers;
 //	}
 	
-	protected BGPRpslSet(CIString name) {
-		this.name = name;
-	}
-	
-	protected void addMember(BGPSetMember member) {
-		members.add(member);
-	}
-	
+//	protected void addMember(BGPSetMember member) {
+//		members.add(member);
+//	}
+//	
 	public String toString() {
 		return name + ":\n    members: " + members + "\n    mbrsByRef: " + mbrsByRef;
 	}
