@@ -3,6 +3,7 @@ package org.rpsl4j.emitters.rpsldocument;
 import java.util.HashSet;
 import java.util.Set;
 
+import clover.com.google.common.collect.Sets;
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
@@ -44,7 +45,23 @@ public class BGPRouteSet extends BGPRpslSet {
 				flattenedRoutes.addAll(resolvedRoutes);
 			}
 			
-		}						
+		}				
+		
+		//Resolve mbrs-by-ref routes
+		if(mbrsByRef.size() == 1 && mbrsByRef.contains("ANY")) {
+			//Take all routes that are member-of this set
+			flattenedRoutes.addAll(parentRpslDocument.getSetMemberRoutes(name));
+		} else if(mbrsByRef.size() > 0) {
+			//Take intersection of routes that are member-of this set, and routes mnt-by a mbr-by-ref maintainer
+			Set<BGPRoute> 	setMembers 		= parentRpslDocument.getSetMemberRoutes(name),
+							byRefMembers 	= new HashSet<>();
+			
+			for(CIString maintainer : mbrsByRef)
+				byRefMembers.addAll(parentRpslDocument.getMntByRoutes(maintainer));
+			
+			flattenedRoutes.addAll(Sets.intersection(setMembers, byRefMembers));
+		}
+		
 		return flattenedRoutes;
 
 //			if(m.type==BGPSetMember.ROUTE) {

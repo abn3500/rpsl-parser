@@ -27,8 +27,11 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 public class BGPRpslRoute extends BGPRoute implements Cloneable {
 
 	Set<CIString> parentSets = new HashSet<CIString>(); //route-sets this route (says) it's a member of (no double checking and mbrsByRef validation yet) //TODO
-	long asNumber = -1;
+	final long asNumber;
+	
 	private boolean isWithdrawn = false;
+	private CIString maintainedBy;
+
 	
 	/**
 	 * Create a BGPRpslRoute object from a rpsl route
@@ -40,6 +43,10 @@ public class BGPRpslRoute extends BGPRoute implements Cloneable {
 		this.asNumber = AutNum.parse(object.getValueForAttribute(AttributeType.ORIGIN)).getValue();
 		this.parentSets.addAll(object.getValuesForAttribute(AttributeType.MEMBER_OF));
 
+		//Get maintainer string
+		if(object.containsAttribute(AttributeType.MNT_BY))
+			maintainedBy = object.getValueForAttribute(AttributeType.MNT_BY);
+		
 		// Check if route has been withdrawn, there is no AttributeType for withdrawn
 		for(RpslAttribute attr : object.getAttributes()) {
 			if(!attr.getKey().equals("withdrawn"))
@@ -81,6 +88,14 @@ public class BGPRpslRoute extends BGPRoute implements Cloneable {
 	 */
 	public boolean isWithdrawn() {
 		return isWithdrawn;
+	}
+	
+	/**
+	 * Return the name of the maintainer of the route object
+	 * @return name of maintainer object or null
+	 */
+	public CIString getMaintainer() {
+		return maintainedBy;
 	}
 
 }

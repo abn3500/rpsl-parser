@@ -35,12 +35,14 @@ public class BGPRpslDocument {
 
 	final static Logger log = LoggerFactory.getLogger(BGPRpslDocument.class);
 	
-    private Multimap<CIString, BGPRpslRoute>	setRoutes	= HashMultimap.create(); //routes by the set(s) they say they are members of (no double checking by listings in rs-set members attribute, and no validation against mbrsByRef maintainers)
-    private Multimap<Long, BGPRpslRoute>		asRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
+	
+    private Multimap<CIString, BGPRpslRoute>	setMemberRoutes	= HashMultimap.create(), //routes by the set(s) they say they are members of
+    											mntByRoutes	= HashMultimap.create(); //routes grouped by their maintainer
+    private Multimap<Long, BGPRpslRoute>		asOriginRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
 	
     //Maps of route-set/as-set RPSL objects to java representations
-    Map<CIString, BGPRpslSet>		routeSets   = new HashMap<>(),
-    								asSets		= new HashMap<>();
+    Map<String, BGPRpslSet>		routeSets   = new HashMap<>(),
+    							asSets		= new HashMap<>();
     
 	private Map<String, BGPAutNum> autNumMap = new HashMap<String, BGPAutNum>();
 	
@@ -100,11 +102,10 @@ public class BGPRpslDocument {
 			if(bgpRoute.isWithdrawn())
 				continue;
 			
-			asRoutes.put(bgpRoute.asNumber, bgpRoute);
+			asOriginRoutes.put(bgpRoute.asNumber, bgpRoute);
 			for(CIString set : bgpRoute.parentSets) {
-				setRoutes.put(set, bgpRoute);
+				setMemberRoutes.put(set, bgpRoute);
 			}
-			
 
 			//HANDLED IN BGPRpslSet instead
 
@@ -119,17 +120,21 @@ public class BGPRpslDocument {
 //					rs.
 //				//check if it s
 //			}
+
+			if(bgpRoute.getMaintainer() != null)
+				mntByRoutes.put(bgpRoute.getMaintainer(), bgpRoute);
+
 		}
 	}
 	
 	private void parseRpslSetObjects() {
 		for(RpslObject o : this.rpslObjects) {
 			if(o.getType() == ObjectType.ROUTE_SET) {
-				routeSets.put(o.getValueForAttribute(AttributeType.ROUTE_SET), new BGPRouteSet(o));
+				routeSets.put(o.getValueForAttribute(AttributeType.ROUTE_SET).toLowerCase(), new BGPRouteSet(o));
 				continue;
 			}
 			if(o.getType() == ObjectType.AS_SET) {
-				asSets.put(o.getValueForAttribute(AttributeType.AS_SET), new BGPAsSet(o));
+				asSets.put(o.getValueForAttribute(AttributeType.AS_SET).toLowerCase(), new BGPAsSet(o));
 				continue;
 			}
 		}
@@ -142,7 +147,7 @@ public class BGPRpslDocument {
 	 * @return
 	 */
 	public Collection<BGPRpslRoute> getSetRoutes(CIString setName) {
-		return setRoutes.get(setName);
+		return setMemberRoutes.get(setName);
 	}
 	
 	/**
@@ -272,10 +277,38 @@ public class BGPRpslDocument {
 	public Set<BGPRoute> getASRoutes(long autNum) {
 		Set<BGPRoute> routeSet = new HashSet<>();
 		//Check if AS has declared route objects
-		if(asRoutes.containsKey(autNum)) {
-			for(BGPRoute r : asRoutes.get(autNum))
+		if(asOriginRoutes.containsKey(autNum)) {
+			for(BGPRoute r : asOriginRoutes.get(autNum))
 				routeSet.add(r.clone());
 		}
 		return routeSet;
 	}
+	
+	/**
+	 * Return a copy of the {@link BGPRoute}s maintained by a particular maintainer; declared as RPSL Route objects.
+	 * @param maintainer maintainer name to query routes for
+	 * @return copy of maintainer's routes
+	 */
+	public Set<BGPRoute> getMntByRoutes(CIString maintainer) {
+		Set<BGPRoute> routeSet = new HashSet<>();
+		if(mntByRoutes.containsKey(maintainer)) {
+			for(BGPRoute r : mntByRoutes.get(maintainer))
+				routeSet.add(r.clone());
+		}
+		return routeSet;			
+	}
+	
+	/**
+	 * Return a copy of the {@link BGPRoute}s that are members-of a route set
+	 * @param maintainer set name to query routes for
+	 * @return copy of set's member routes
+	 */
+	public Set<BGPRoute> getSetMemberRoutes(CIString setName) {
+		Set<BGPRoute> routeSet = new HashSet<>();
+		if(mntByRoutes.containsKey(setName)) {
+			for(BGPRoute r : mntByRoutes.get(setName))
+				routeSet.add(r.clone());
+		}
+		return routeSet;			
+	} 
 }
