@@ -5,6 +5,7 @@
 
 package org.rpsl4j.emitters.rpsldocument;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -46,6 +47,13 @@ public class BGPRpslDocument {
 	public BGPRpslDocument(Set<RpslObject> rpslObjects) {
 		this.rpslObjects = rpslObjects;
 		parseRpslRouteObjects();
+		parseRpslSetObjects(); //mbrs-by-ref handled here for now
+		
+		
+		//TODO: include mbrs by ref processig in there
+		//parseRpslAutNumObjects(); //also for mbrs by ref //TODO
+		
+		
 	}
 	
 	/**
@@ -87,7 +95,6 @@ public class BGPRpslDocument {
 			if(o.getType() != ObjectType.ROUTE)
 				continue; //skip non Route objects
 
-			//parse as BGPRoute, grab key info and add to index
 			BGPRpslRoute bgpRoute = new BGPRpslRoute(o);
 			
 			if(bgpRoute.isWithdrawn())
@@ -97,7 +104,45 @@ public class BGPRpslDocument {
 			for(CIString set : bgpRoute.parentSets) {
 				setRoutes.put(set, bgpRoute);
 			}
+			
+
+			//HANDLED IN BGPRpslSet instead
+
+//			//add to route-sets based on mbrs-by-ref rules
+//			for(CIString setName : bgpRoute.parentSets) {
+//				BGPRpslSet rs = routeSets.get(setName); //lookup the set
+//				if(rs==null) { //set this route wants membership in doesn't exist.
+//					log.warn("Route " + bgpRoute + "requested membership in a non-existant set: " + setName);
+//					continue; //TODO: check which logging method we should be using
+//				}
+//				if(rs.mbrsByRef.contains("ANY"))
+//					rs.
+//				//check if it s
+//			}
 		}
+	}
+	
+	private void parseRpslSetObjects() {
+		for(RpslObject o : this.rpslObjects) {
+			if(o.getType() == ObjectType.ROUTE_SET) {
+				routeSets.put(o.getValueForAttribute(AttributeType.ROUTE_SET), new BGPRouteSet(o));
+				continue;
+			}
+			if(o.getType() == ObjectType.AS_SET) {
+				asSets.put(o.getValueForAttribute(AttributeType.AS_SET), new BGPAsSet(o));
+				continue;
+			}
+		}
+	}
+	
+	
+	/**
+	 * Get route objects that claim membership in the given set. (Used for processing mbrs-by-ref)
+	 * @param setName
+	 * @return
+	 */
+	public Collection<BGPRpslRoute> getSetRoutes(CIString setName) {
+		return setRoutes.get(setName);
 	}
 	
 	/**
@@ -146,16 +191,27 @@ public class BGPRpslDocument {
 	 * @return as-set object or null
 	 */
 	BGPRpslSet getASSet(String setName) {
-		//Initialise routeSet mapping if empty
-		if(routeSets.size() != 0) {
-			for(RpslObject o : this.rpslObjects) {
-				if(o.getType() == ObjectType.AS_SET)
-					continue;
-				//TODO construct asSet object and add to asSets
-			}
-		}
-		
-		return asSets.get(setName);
+//		if(asSets.size() != 0) {
+//			for(RpslObject o : this.rpslObjects) {
+//				if(o.getType() != ObjectType.AS_SET)
+//					continue;
+//				//TODO construct asSet object and add to asSets
+//				
+//			}
+//		}
+		return asSets.get(CIString.ciString(setName));
+	}
+	
+	BGPRpslSet getRouteSet(String setName) {
+//		//Initialise routeSet mapping if empty
+//		if(routeSets.size() != 0) {
+//			for(RpslObject o : this.rpslObjects) {
+//				if(o.getType() != ObjectType.ROUTE_SET)
+//					continue;
+//				//TODO 
+//			}
+//		}
+		return routeSets.get(CIString.ciString(setName));
 	}
 	
 	/**

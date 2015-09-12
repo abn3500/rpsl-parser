@@ -16,7 +16,6 @@ public class BGPRouteSet extends BGPRpslSet {
 		super(obj);
 	}	
 
-	//members, mbrsByRef.. etc. //TODO:
 	@Override
 	protected Set<BGPRoute> resolve(BGPRpslDocument parentRpslDocument, Set<BGPRpslSet> visitedNodes) {
 		HashSet<BGPRoute> flattenedRoutes = new HashSet<BGPRoute>();

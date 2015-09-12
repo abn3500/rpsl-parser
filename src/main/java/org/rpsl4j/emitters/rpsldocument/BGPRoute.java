@@ -132,7 +132,7 @@ public class BGPRoute implements Cloneable {
 	
 	/**
 	 * Applies the given postfix to this object, combining it with any existing prefix.
-	 * As per: https://tools.ietf.org/html/rfc2622#page-6
+	 * As per: https://tools.ietf.org/html/rfc2622#page-6 //TODO: Note that this is an updated version of the spec. It was chosen because it had greater clarity
 	 * @param newPrefix rpsl route prefix operator
 	 */
 	public void appendPostfix(String newPrefix) {
@@ -147,50 +147,57 @@ public class BGPRoute implements Cloneable {
 		if(existingPrefix==null) //no prefix
 			newPrefixedRoute = existingRoute + newPrefix; //apply new prefix directly
 		else {
-			//calculate new prefix - format is ^n-m (counter intuitively)
 			int currentN = routePrefixObject.getRangeOperation().getN(); 
-			
-			RangeOperation newPrefix_RangeOperation = RangeOperation.parse(newPrefix, 0, 32); //TODO Maxing at 32bit for ipv4
-			int newN = newPrefix_RangeOperation.getN();
-			int newM = newPrefix_RangeOperation.getM();
-			
-			int maxN = Math.max(currentN, newN);
-			
-			if (!(maxN <= newM)) //New prefix is going backwards (eg 1.1.1.1/8^16-15). As per spec, strip prefix altogether.
-				newPrefixedRoute = existingRoute;
-			else
-				newPrefixedRoute = existingRoute + "^"+maxN+"-"+newM;
+
+			//alternate logic for + and -
+			//for +/-, we don't consider an upper bound; so everything becomes x-32, given we're in IPV4
+			if(newPrefix.equals("^-")) { //exclusive more specifics operator
+				if((currentN+1)>32) //if an exclusive more specifics version of this prefix would result in 33-32, we clearly have no addresses left, and an invalid prefix. Drop it. Not positive what the spec says about this, but it presumably falls under the m-n where m>n case; drop the address completely.
+					throw new IllegalArgumentException("prefix ^" + currentN+1  +"-32 would be created by applying ^- to route: " + addrStr);
+				
+				//if we'd have {1.1.1.1/8^+}^- --> 1.1.1.1/8^9-32, change that for 1.1.1.1/8^-
+				if(currentN==routePrefixObject.getIpInterval().getPrefixLength()) //avoid m-n if previous prefix was ^+
+					newPrefixedRoute = existingRoute + "^-";
+				else
+					newPrefixedRoute = existingRoute + "^"+ (currentN+1) + "-32";  //we want currentN+1 - 32
+			}
+			else if (newPrefix.equals("^+")) { //inclusive more specifics operator
+				
+				//if existing is ^- or equivalent, don't do anything; adding a ^+ to a ^- results in a ^-
+				if(currentN==routePrefixObject.getIpInterval().getPrefixLength()+1) //if currently ^(maskLength+1)-x, we effectively have ^-. Adding a ^+ won't change it. So stop now
+					newPrefixedRoute = existingRoute + "^-"; //adding ^+ to a ^- equivalent has no effect. - But if we get 1.1.1.1/8^9-32, we can still neaten it up
+				else if(currentN==routePrefixObject.getIpInterval().getPrefixLength()) //if n is the mask length (ie x.x.x.x/8^8-x), we want to say ^+ rather than ^maskLength-32, as they have equivalent meaning.
+						newPrefixedRoute = existingRoute + "^+";
+				else
+					newPrefixedRoute = existingRoute + "^"+ currentN + "-32";
+			}
+			else {
+				//if numeric
+				//calculate new prefix - format is ^n-m (counter intuitively)
+				
+				
+				RangeOperation newPrefix_RangeOperation = RangeOperation.parse(newPrefix, 0, 32); //TODO Maxing at 32bit for ipv4
+				int newN = newPrefix_RangeOperation.getN();
+				int newM = newPrefix_RangeOperation.getM();
+				
+				int maxN = Math.max(currentN, newN);
+				
+				if (!(maxN <= newM)) //New prefix is going backwards (eg 1.1.1.1/8^16-15). As per spec, strip prefix altogether. - Edit: actually by prefix, they meant the whole address. Delete the whole address. Now it makes sense.
+					throw new IllegalArgumentException("Cannot set m of an address prefix to a value smaller than the larger of the two n values - see the spec."); //newPrefixedRoute = existingRoute;
+				else {
+					if(maxN==newM) // if range format of n-n, just use n
+						newPrefixedRoute = existingRoute + "^"+maxN;
+					else
+						newPrefixedRoute = existingRoute + "^"+maxN+"-"+newM;
+				}
+			}
 		}
 
+		//System.out.println("DEBUG: " + newPrefixedRoute);
 		//reconstruct route prefix object with new prefix
 		routePrefixObject = AddressPrefixRange.parse(newPrefixedRoute);
 		routeNetwork = routePrefixObject.getIpInterval().beginAsInetAddress().getHostAddress();
 		routePrefix = routePrefixObject.getIpInterval().getPrefixLength();
-		
-		
-//		if(!addrStr.contains("^")) //no existing prefix
-//			addrStr+=prefixOperator;
-//		else {
-//			//a range applied to a set with existing ranges in it has the effect of bounding the address by the new range, with the exception that the lower bound can only move up.
-//			//if we had {innerAddress^i1-i2}^o1-o2, we would get innerAddress^max(i1, 01)-o2 - if 02 isn't greater or equal to max(i1, o1), the postfix is removed completely.. erm, that latter bit seems more iffy - but then, the address mask is still there, we're just removing the ability to specify additional addresses at all.. so I guess the result of closing it off too much win contradictory prefixes is that it has no viable prefix left.. right
-//
-//			//extract existing
-//			//String origPostfix = addrStr.substring(addrStr.lastIndexOf('^'));
-//			
-//			
-//			//int previousM = ro.getM(); //not needed
-//			
-//			
-//			
-//			addrStr = addrStr.substring(0, addrStr.lastIndexOf('^')); //strip existing prefix
-//			if (!(maxN <= newM)) { //prefix is invalidated by addition. Return clean address
-//				log.debug("stripped prefix. New address string: " + addrStr);
-//			}
-//			else {
-//				//prefix is now ^maxN-newM
-//				addrStr+= "^"+maxN+"-"+newM;
-//			}
-//		}
 	}
 
 	@Override

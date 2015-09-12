@@ -18,7 +18,7 @@ import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 /**
  * Abstract parent class for RPSL set objects that can be resolved to a set of routes
- * @author Benjamin George Roberts
+ * @author Benjamin George Roberts, Nathan Kelly
  */
 public abstract class BGPRpslSet {
 	
@@ -74,24 +74,40 @@ public abstract class BGPRpslSet {
 		if (visitedNodes.contains(this)) //ensure we're not retracing our footsteps
 			return flattenedRoutes;
 		visitedNodes.add(this); //add this set to the index
+		//find autnums and routes that have requested membership in this set. //TODO: perhaps break out into subclasses to prevent a type ending up in the wrong type of set
+		if(mbrsByRef.contains(CIString.ciString("ANY"))) { //if we're not fussy about what we add by reference, speed things up
+			flattenedRoutes.addAll(parentRpslDocument.getSetRoutes(name));
+		}
+		else {
+			for(BGPRpslRoute r : parentRpslDocument.getSetRoutes(name)) { //for all routes that claim membership in this set
+				//TODO: if there is an intersection between our mbrsByRef attribute, and the maintainers of this route, add the route. ..only problem being how to determine the maintainers of the route
+				//if(r.getMaintainers()mbrsByRef.)
+			}
+		}
 		
 		for(CIString member : members) {
+			member = CIString.ciString(member.toLowerCase().trim()); //clean //TODO: check if these values are already clean
+			Pair<String, String> refMember = splitPrefix(member.toString());
+			String refMemberName = refMember.getLeft();
+			String prefix = refMember.getRight();
+			
 			//Test if member is a as-set
 			if(member.startsWith("as-"))  {
-				BGPRpslSet memberSetObject = parentRpslDocument.asSets.get(member);
+				BGPRpslSet memberSetObject = parentRpslDocument.asSets.get(refMemberName);
 				Set<BGPRoute> resolvedRoutes = memberSetObject.resolve(parentRpslDocument, visitedNodes);
-				//TODO Apply prefix operation to these routes without clone
+				
+				applyPrefix(resolvedRoutes, prefix); //apply prefix, if any
+
 				flattenedRoutes.addAll(resolvedRoutes);
 			} else {
 				//Try resolve it as an AS
 				try {
-					AutNum autNum = AutNum.parse(member);
+					AutNum autNum = AutNum.parse(refMemberName);
 					Set<BGPRoute> resolvedRoutes = parentRpslDocument.getASRoutes(autNum.getValue());
-					//TODO Apply prefix operation to these routes without clone
+					applyPrefix(resolvedRoutes, prefix); //TODO: is this even a legal option in an as-set??
 					flattenedRoutes.addAll(resolvedRoutes);
 				} catch(AttributeParseException e) {}
 			}
-				
 		}
 		
 		
@@ -101,28 +117,25 @@ public abstract class BGPRpslSet {
 		return flattenedRoutes;
 	}
 	
-//	protected static Set<BGPSetMember> applyPostfix(Set<BGPSetMember> members , CIString postfix) {
-//		HashSet<BGPSetMember> processedMembers = new HashSet<BGPSetMember>();
-//		for(BGPSetMember member : members) {
-//			if(member.type==BGPSetMember.ROUTE) {
-//				BGPRoute route = member.getValue_Route();
-//				
-//				//String rawAddress = route.routePrefixObject.toString().toLowerCase().trim();
-//				//make a new route object with the composite prefix (or just the new one if none existed).
-//				//Encapsulate it in a fresh BGPSetMember with no prefix (given we no longer have one we need to apply)
-//				processedMembers.add(new BGPSetMember(route.cloneAppendingNewPostfix(postfix.toString())));
-//				
-//			} //end if Route
-//			//else if(member.type==BGPSetMember.SET) //this is leading toward recursive shit.. //TODO
-//				
-//		} //end for
-//		return processedMembers;
-//	}
 	
-//	protected void addMember(BGPSetMember member) {
-//		members.add(member);
-//	}
-//	
+	/**
+	 * Applies the given prefix to all routes in the given set, deleting routes for which the combined prefix is invalid (as per the spec)
+	 * @param routeSet
+	 * @param prefix
+	 */
+	private void applyPrefix(Set<BGPRoute> routeSet, String prefix) {
+		if(prefix==null)
+			return;
+		
+		for(BGPRoute r : routeSet) {
+			try {
+				r.appendPostfix(prefix);
+			} catch (IllegalArgumentException e) { //failed to mix prefixes
+				routeSet.remove(r); //TODO: check this is an acceptable time to get rid of it
+			}
+		}
+	}
+	
 	public String toString() {
 		return name + ":\n    members: " + members + "\n    mbrsByRef: " + mbrsByRef;
 	}

@@ -11,6 +11,7 @@ import java.util.Set;
 
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
+import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
 
 import org.junit.Test;
@@ -86,31 +87,116 @@ public class BGPRouteTest {
 	}
 	
 	@Test
-	public void applyPostfix() {
-		AddressPrefixRange addr1 = AddressPrefixRange.parse("1.1.1.1/8^+");
-		AddressPrefixRange addr2 = AddressPrefixRange.parse("1.1.1.1/16^16-24");
+	public void appendPostFix() {
+		final String ROUTE_NO_POSTFIX = "1.1.1.1/8";
+		final String ROUTE_WITH_POSTFIX = "1.1.1.1/8^15-25";
 		
-		String newPostfix1 = "^20-32";
-		String newPostfix2 = "^+";
-		String tooShortPostfix = "^12-32"; //should be constrained to 16-32; not drop to 12
-		String latterTooSmall = "^10-12";
-		
-		
-		BGPRoute r1 = new BGPRoute(addr1, null);
-		BGPRoute r2 = new BGPRoute(addr2, null);
-		
-		BGPRoute edit1 = r1.clone();
-		edit1.appendPostfix(newPostfix1);
-		BGPRoute edit2 = r2.clone();
-		edit2.appendPostfix(tooShortPostfix);
-		BGPRoute edit3 = r2.clone();
-		edit3.appendPostfix(latterTooSmall);
-		
-		
-		System.out.println(edit1.routePrefixObject);
-		System.out.println(edit2.routePrefixObject);
-		System.out.println(edit3.routePrefixObject);
-		
-	}
+		BGPRoute r;
+		BGPRoute rp; //route with prefix
 
+		//append prefix to non-prefixed route
+		r = new BGPRoute(AddressPrefixRange.parse(ROUTE_NO_POSTFIX), null);
+		r.appendPostfix("^16-24");
+		assertEquals("1.1.1.1/8^16-24", r.routePrefixObject.toString());
+		
+		
+		r = new BGPRoute(AddressPrefixRange.parse(ROUTE_NO_POSTFIX), null);
+		r.appendPostfix("^+");
+		
+		//assertEquals("1.1.1.1/8^8-32", r.routePrefixObject.toString()); //valid if calculating all values
+		assertEquals(new Integer(8), r.routePrefixObject.getRangeOperation().getN()); //valid if simply concatenating prefix..hmm
+		assertEquals(new Integer(32), r.routePrefixObject.getRangeOperation().getM());
+		
+		r = new BGPRoute(AddressPrefixRange.parse(ROUTE_NO_POSTFIX), null);
+		r.appendPostfix("^-");
+		assertEquals("1.1.1.1/8^-", r.routePrefixObject.toString()); //"1.1.1.1/8^9-32" would also be valid
+		//ensure internal value is correct; that this wasn't simply a string concat with no underlying effect
+		assertEquals(new Integer(9), r.routePrefixObject.getRangeOperation().getN()); //n-m (again, it's not alphabetic - WHY I DO NOT KNOW)
+		assertEquals(new Integer(32), r.routePrefixObject.getRangeOperation().getM());
+		
+		
+		/************/
+		
+		//more specific (inclusive)
+		rp = new BGPRoute(AddressPrefixRange.parse(ROUTE_WITH_POSTFIX), null);
+		rp.appendPostfix("^+"); //expect ^15-25 to become ^15-32
+		assertEquals("1.1.1.1/8^15-32", rp.routePrefixObject.toString());
+
+		//more specific (exclusive) //TODO: find a clearer source on what this actually means - current interpretation is wrong, or addressprefixrange has a bug..
+		rp = new BGPRoute(AddressPrefixRange.parse(ROUTE_WITH_POSTFIX), null);
+		rp.appendPostfix("^-"); //expect ^15-25 to become ^16-32
+		assertEquals("1.1.1.1/8^16-32", rp.routePrefixObject.toString());
+		
+		//^^This will fail if ^- isn't handled specifically 
+		
+		
+		//test trying to make prefix less specific
+		rp = new BGPRoute(AddressPrefixRange.parse("1.1.1.1/16^16"), null);
+		rp.appendPostfix("^10-20"); //expect ^16-20
+		assertEquals("1.1.1.1/16^16-20", rp.routePrefixObject.toString());
+		
+		//test out of range postfix
+		rp = new BGPRoute(AddressPrefixRange.parse(ROUTE_WITH_POSTFIX), null);
+		try {
+			rp.appendPostfix("^8-10"); //8 is < 10, but max(8,15) is > 10. Our range is going backwards; the postfix should be dropped - edit; no, the spec could've been slightly clearer there: the ENTIRE address prefix.. meaning not just the prefix (yeah, totally clear :P) gets dropped. Ie {1.1.1.1/8^10-20}^7-9 should result in null, effectively.
+			fail("Out of range prefix should throw exception");
+		} catch (IllegalArgumentException e) {}
+		//assertEquals(null, rp.routePrefixObject);
+	
+		//broaden range
+		rp = new BGPRoute(AddressPrefixRange.parse(ROUTE_WITH_POSTFIX), null);
+		rp.appendPostfix("^10-28");
+		assertEquals("1.1.1.1/8^15-28", rp.routePrefixObject.toString());
+		
+		//shrink range
+		rp = new BGPRoute(AddressPrefixRange.parse(ROUTE_WITH_POSTFIX), null);
+		rp.appendPostfix("^17-22");
+		assertEquals("1.1.1.1/8^17-22", rp.routePrefixObject.toString());
+
+		//test single value prefix
+		rp = new BGPRoute(AddressPrefixRange.parse(ROUTE_WITH_POSTFIX), null);
+		rp.appendPostfix("^17");
+		assertEquals("1.1.1.1/8^17", rp.routePrefixObject.toString()); //"^17 and ^17-17" are equivalent
+		
+		//test +/- change example from (updated) rfc: https://tools.ietf.org/html/rfc2622#page-6
+		//{128.9.0.0/16^+}^-     == {128.9.0.0/16^-}
+        //{128.9.0.0/16^-}^+     == {128.9.0.0/16^-}
+		rp = new BGPRoute(AddressPrefixRange.parse("128.9.0.0/16^+"), null);
+		rp.appendPostfix("^-");
+		assertEquals("128.9.0.0/16^-", rp.routePrefixObject.toString());
+		
+		rp = new BGPRoute(AddressPrefixRange.parse("128.9.0.0/16^-"), null);
+		rp.appendPostfix("^+");
+		assertEquals("128.9.0.0/16^-", rp.routePrefixObject.toString());
+		
+		
+		//equivalent to last
+		rp = new BGPRoute(AddressPrefixRange.parse("128.9.0.0/16^17-32"), null);
+		rp.appendPostfix("^+"); // this turns ^n-m into n-32. /16^17-32 is equivalent to /16^-
+		assertEquals("128.9.0.0/16^-", rp.routePrefixObject.toString());
+		
+		//changing m (top of range) (^n-m) here should have no effect
+		rp = new BGPRoute(AddressPrefixRange.parse("128.9.0.0/16^17-18"), null);
+		rp.appendPostfix("^+"); //
+		assertEquals("128.9.0.0/16^-", rp.routePrefixObject.toString());
+		
+		
+		//^+ onto address where /n^n (n is mask length) - we expect just ^+
+		rp = new BGPRoute(AddressPrefixRange.parse("128.9.0.0/16^16-18"), null);
+		rp.appendPostfix("^+"); //expect ^16-x to become ^16-32 --> ^+
+		assertEquals("128.9.0.0/16^+", rp.routePrefixObject.toString());
+		
+		//try to apply ^- to something that can't become any more specific
+		rp = new BGPRoute(AddressPrefixRange.parse("128.9.0.0/16^32"), null); //TODO: Should ^32 be considered a valid final prefix.. seems logical; accept any exact address starting with 128.9.x.x
+		try{
+			rp.appendPostfix("^-");
+			fail("Applying ^- prefix to ^32 address should invalidate it");
+		} catch (IllegalArgumentException e) {}
+		
+		
+		//logic notes:
+		//^n-m
+		//N can only go up. M is dictated by the outer prefix.
+		//If however m becomes smaller than the new n, we have an invalid address. Throw everything out. Address == null
+	}
 }
