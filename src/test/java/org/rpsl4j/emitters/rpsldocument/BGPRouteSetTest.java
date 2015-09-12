@@ -6,6 +6,7 @@
 package org.rpsl4j.emitters.rpsldocument;
 
 import static org.junit.Assert.*;
+import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.io.RpslObjectStringReader;
 
 import org.junit.Test;
@@ -25,18 +26,23 @@ public class BGPRouteSetTest {
 		BGPRpslDocument doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(
 				routeMaintainedMember + routeMember + routeOrphan + routeSetByRef));
 		
-		assertTrue("only routes with matching member-of and mnt-by should be added to set with restrictive mbrs-by-ref",
-				doc.routeSets.get("rs-set").resolve(doc).size() == 1);
+		assertEquals("only routes with matching member-of and mnt-by should be added to set with restrictive mbrs-by-ref", 1,
+				doc.routeSets.get("rs-set").resolve(doc).size());
+
+		//double check it was the right one (I think I get the convoluted call award :L) 
+		assertTrue(((BGPRpslRoute)doc.routeSets.get("rs-set").resolve(doc).iterator().next()).getMaintainer().equals(CIString.ciString("MNTR-ONE")));
 		
 		//Check that all routes with member-of are added to unrestricted set
 		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(
-				routeMaintainedMember + routeMaintainedMember + routeOrphan + routeSetAny));
+				routeMaintainedMember + routeMember + routeOrphan + routeSetAny));
 		assertTrue("all routes with matching member-of should be added to set with mbrs-by-ref: ANY",
 				doc.routeSets.get("rs-set").resolve(doc).size() == 2);
 		
+		
+		
 		//Check that set w/ no mbrs-by-ref is empty
 		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(
-				routeMaintainedMember + routeMaintainedMember + routeOrphan + routeSetEmpty));
+				routeMaintainedMember + routeMember + routeOrphan + routeSetEmpty));
 		assertTrue("route set with no mbrs-by-ref should not load any member-of routes",
 				doc.routeSets.get("rs-set").resolve(doc).size() == 0);
 		

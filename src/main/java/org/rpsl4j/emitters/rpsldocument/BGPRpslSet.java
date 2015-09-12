@@ -80,8 +80,8 @@ public abstract class BGPRpslSet {
 		}
 		else {
 			for(BGPRpslRoute r : parentRpslDocument.getSetRoutes(name)) { //for all routes that claim membership in this set
-				//TODO: if there is an intersection between our mbrsByRef attribute, and the maintainers of this route, add the route. ..only problem being how to determine the maintainers of the route
-				//if(r.getMaintainers()mbrsByRef.)
+				if(mbrsByRef.contains(r.getMaintainer())) //if the route's maintainer is one of those we accept routes from
+					flattenedRoutes.add(r);
 			}
 		}
 		

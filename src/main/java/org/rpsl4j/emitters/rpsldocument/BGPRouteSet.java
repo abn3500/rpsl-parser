@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2015 Benjamin Roberts, Nathan Kelly, Andrew Maxwell
+ * All rights reserved.
+ */
+
 package org.rpsl4j.emitters.rpsldocument;
 
 import java.util.HashSet;
