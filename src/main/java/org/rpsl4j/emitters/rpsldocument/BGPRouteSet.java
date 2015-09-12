@@ -3,7 +3,7 @@ package org.rpsl4j.emitters.rpsldocument;
 import java.util.HashSet;
 import java.util.Set;
 
-import clover.com.google.common.collect.Sets;
+import com.google.common.collect.Sets;
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
