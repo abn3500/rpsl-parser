@@ -11,7 +11,6 @@ import java.util.Set;
 
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
-import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
 
 import org.junit.Test;

@@ -7,15 +7,12 @@ package org.rpsl4j.emitters.rpsldocument;
 
 import static org.junit.Assert.*;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import javax.swing.plaf.basic.BasicRootPaneUI;
 
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.io.RpslObjectStringReader;
-import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
 
