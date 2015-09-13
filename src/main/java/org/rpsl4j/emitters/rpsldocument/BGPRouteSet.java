@@ -8,7 +8,10 @@ package org.rpsl4j.emitters.rpsldocument;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.google.common.collect.Sets;
+
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.RpslObject;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
@@ -32,18 +35,26 @@ public class BGPRouteSet extends BGPRpslSet {
 		
 		//Resolve route prefixes or route-sets in members list
 		for(CIString member : members) {
+			//Split member into its name and prefix
+			Pair<String, String> refMemberPair = splitPrefix(member.toString());
+			String 	memberName = refMemberPair.getLeft(),
+					prefix = refMemberPair.getRight();
+			
 			//Try it as a prefix
 			try {
-				AddressPrefixRange prefix = AddressPrefixRange.parse(member);
-				flattenedRoutes.add(new BGPRoute(prefix, null));
+				BGPRoute newRoute = new BGPRoute(AddressPrefixRange.parse(memberName), null);
+				if(prefix != null)
+					newRoute.appendPostfix(prefix);
+				
+				flattenedRoutes.add(newRoute);
 				continue;
 			} catch(AttributeParseException e) {}
 			
 			//Try member as a route set
-			if(member.startsWith("rs-")) {
-				BGPRpslSet memberSetObject = parentRpslDocument.routeSets.get(member);
+			if(memberName.startsWith("rs-")) {
+				BGPRpslSet memberSetObject = parentRpslDocument.routeSets.get(memberName);
 				Set<BGPRoute> resolvedRoutes = memberSetObject.resolve(parentRpslDocument, visitedNodes);
-				//TODO Apply prefix operation to these routes without clone
+				applyPrefix(resolvedRoutes, prefix);
 				flattenedRoutes.addAll(resolvedRoutes);
 			}
 			
