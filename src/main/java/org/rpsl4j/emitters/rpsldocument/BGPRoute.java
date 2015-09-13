@@ -17,7 +17,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslAttribute;
 import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
@@ -83,7 +82,7 @@ public class BGPRoute implements Cloneable {
 				return new HashSet<BGPRoute>();
 			}
 			
-			// try parse route string as AS, then as route prefix
+			// try parse route string as AS, then as a routeset/as-set, then finally as a route prefix
 			if (doc != null && routeString.matches("AS\\d{1,5}")) {
 				
 				// route string is an AS, parse it and add to dock
@@ -95,6 +94,20 @@ public class BGPRoute implements Cloneable {
 						routeObjectSet.add(r);
 					}	
 				} catch (AttributeParseException e) {}
+			} else if(routeString.startsWith("as-")) {
+				if(doc.asSets.containsKey(routeString)) {
+					for(BGPRoute r : doc.asSets.get(routeString).resolve(doc)) {
+						r.nextHop = localRouter;
+						routeObjectSet.add(r);
+					}
+				}
+			} else if(routeString.startsWith("rs-")) {
+				if(doc.routeSets.containsKey(routeString)) {
+					for(BGPRoute r : doc.routeSets.get(routeString).resolve(doc)) {
+						r.nextHop = localRouter;
+						routeObjectSet.add(r);
+					}
+				}
 			} else {	
 				//Try and parse/add the routeprefix
 				try {
