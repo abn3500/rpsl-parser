@@ -12,20 +12,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.rpsl4j.emitters.OutputEmitter;
-import org.rpsl4j.emitters.OutputEmitters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import net.ripe.db.whois.common.rpsl.RpslObject;
 
 public class OutputWriter {
 
-	OutputEmitter outputEmitter = OutputEmitters.get(OutputEmitters.DEFAULT_EMITTER);
-	Set<RpslObject> rpslObjects = new HashSet<RpslObject>();
-
-	public OutputWriter(Set<RpslObject> rpslObjects) {
-		this.rpslObjects = rpslObjects;
-	}
+	final OutputEmitter outputEmitter;
+	final Set<RpslObject> rpslObjects = new HashSet<RpslObject>();
 	
 	public OutputWriter(OutputEmitter emitter) {
 		this.outputEmitter = emitter;
@@ -33,7 +26,7 @@ public class OutputWriter {
 	
 	public OutputWriter(Set<RpslObject> rpslObjects, OutputEmitter emitter) {
 		this(emitter);
-		this.outputEmitter = emitter;
+		rpslObjects.addAll(rpslObjects);
 	}
 	
 	public String toString() {
