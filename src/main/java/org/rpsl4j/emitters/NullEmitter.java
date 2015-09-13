@@ -13,7 +13,7 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 
 /**
  * Empty implementation of {@link OutputEmitter}. Ignores all input and returns the empty string.
- * Used as the fall back emitter in {@link OutputEmitters}.
+ * Used as the fall back emitter in {@link OutputEmitterProvider}.
  * @author Benjamin George Roberts
  */
 public class NullEmitter implements OutputEmitter {

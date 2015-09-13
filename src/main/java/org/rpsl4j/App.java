@@ -11,7 +11,6 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 import org.rpsl4j.emitters.OutputEmitter;
-import org.rpsl4j.emitters.OutputEmitters;
 
 import net.ripe.db.whois.common.io.RpslObjectFileReader;
 import net.ripe.db.whois.common.io.RpslObjectStreamReader;
@@ -86,7 +85,7 @@ public class App {
 	}
 
 	public static String getAvailableEmitters() {
-		return "Available emitters: " + StringUtils.join(OutputEmitters.getEmitterList(), ", ");
+		return "Available emitters: " + StringUtils.join(OutputEmitterProvider.getEmitterList(), ", ");
 	}
 	
 	public static void printEmitterArguments(OutputEmitter argsEmitter) {
@@ -121,13 +120,9 @@ public class App {
 		
 		//get emitter, initialise with arguments if they exist
 		if(emitterArguments.size() > 0) {
-			emitter = (emitterName != null) ? 
-					(OutputEmitters.get(emitterName, emitterArguments)) :
-					(OutputEmitters.get(OutputEmitters.DEFAULT_EMITTER, emitterArguments));
+			emitter = OutputEmitterProvider.get(emitterName, emitterArguments);
 		} else {
-			emitter = (emitterName != null) ? 
-					(OutputEmitters.get(emitterName)) :
-			        (OutputEmitters.get(OutputEmitters.DEFAULT_EMITTER));
+			emitter = OutputEmitterProvider.get(emitterName);
 		}
 		
 		//If we are listing arguments, return false after setting the emitter
