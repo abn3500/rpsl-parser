@@ -13,8 +13,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.RpslObject;
-import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
-import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 /**
  * Abstract parent class for RPSL set objects that can be resolved to a set of routes
@@ -46,7 +44,7 @@ public abstract class BGPRpslSet {
 	 * @param referencedObject
 	 * @return A pair of: (referenced item, prefix or null)
 	 */
-	public static Pair<String, String> splitPrefix(String referencedObject) {
+	protected static Pair<String, String> splitPrefix(String referencedObject) {
 		String s = referencedObject.toString(); //TODO Make sure this data has been cleaned
 		int prefixStartIndex = s.lastIndexOf('^');
 		if(prefixStartIndex==-1) //no prefix
@@ -68,54 +66,7 @@ public abstract class BGPRpslSet {
 	 * @param visitedNodes Set of nodes that have already been resolved
 	 * @return clone of {@link BGPRoute} objects contained by set
 	 */
-	protected Set<BGPRoute> resolve(BGPRpslDocument parentRpslDocument, Set<BGPRpslSet> visitedNodes) {
-		HashSet<BGPRoute> flattenedRoutes = new HashSet<BGPRoute>();
-		
-		if (visitedNodes.contains(this)) //ensure we're not retracing our footsteps
-			return flattenedRoutes;
-		visitedNodes.add(this); //add this set to the index
-		//find autnums and routes that have requested membership in this set. //TODO: perhaps break out into subclasses to prevent a type ending up in the wrong type of set
-		if(mbrsByRef.contains(CIString.ciString("ANY"))) { //if we're not fussy about what we add by reference, speed things up
-			flattenedRoutes.addAll(parentRpslDocument.getSetRoutes(name));
-		}
-		else {
-			for(BGPRpslRoute r : parentRpslDocument.getSetRoutes(name)) { //for all routes that claim membership in this set
-				if(mbrsByRef.contains(r.getMaintainer())) //if the route's maintainer is one of those we accept routes from
-					flattenedRoutes.add(r);
-			}
-		}
-		
-		for(CIString member : members) {
-			member = CIString.ciString(member.toLowerCase().trim()); //clean //TODO: check if these values are already clean
-			Pair<String, String> refMember = splitPrefix(member.toString());
-			String refMemberName = refMember.getLeft();
-			String prefix = refMember.getRight();
-			
-			//Test if member is a as-set
-			if(member.startsWith("as-"))  {
-				BGPRpslSet memberSetObject = parentRpslDocument.asSets.get(refMemberName);
-				Set<BGPRoute> resolvedRoutes = memberSetObject.resolve(parentRpslDocument, visitedNodes);
-				
-				applyPrefix(resolvedRoutes, prefix); //apply prefix, if any
-
-				flattenedRoutes.addAll(resolvedRoutes);
-			} else {
-				//Try resolve it as an AS
-				try {
-					AutNum autNum = AutNum.parse(refMemberName);
-					Set<BGPRoute> resolvedRoutes = parentRpslDocument.getASRoutes(autNum.getValue());
-					applyPrefix(resolvedRoutes, prefix); //TODO: is this even a legal option in an as-set??
-					flattenedRoutes.addAll(resolvedRoutes);
-				} catch(AttributeParseException e) {}
-			}
-		}
-		
-		
-		//Remove ourselves from visitors so set specific code can run
-		visitedNodes.remove(this);
-		
-		return flattenedRoutes;
-	}
+	abstract Set<BGPRoute> resolve(BGPRpslDocument parentRpslDocument, Set<BGPRpslSet> visitedNodes);
 	
 	
 	/**
@@ -123,7 +74,7 @@ public abstract class BGPRpslSet {
 	 * @param routeSet
 	 * @param prefix
 	 */
-	private void applyPrefix(Set<BGPRoute> routeSet, String prefix) {
+	protected void applyPrefix(Set<BGPRoute> routeSet, String prefix) {
 		if(prefix==null)
 			return;
 		

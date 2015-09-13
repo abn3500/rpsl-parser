@@ -107,20 +107,6 @@ public class BGPRpslDocument {
 				setMemberRoutes.put(set, bgpRoute);
 			}
 
-			//HANDLED IN BGPRpslSet instead
-
-//			//add to route-sets based on mbrs-by-ref rules
-//			for(CIString setName : bgpRoute.parentSets) {
-//				BGPRpslSet rs = routeSets.get(setName); //lookup the set
-//				if(rs==null) { //set this route wants membership in doesn't exist.
-//					log.warn("Route " + bgpRoute + "requested membership in a non-existant set: " + setName);
-//					continue; //TODO: check which logging method we should be using
-//				}
-//				if(rs.mbrsByRef.contains("ANY"))
-//					rs.
-//				//check if it s
-//			}
-
 			if(bgpRoute.getMaintainer() != null)
 				mntByRoutes.put(bgpRoute.getMaintainer(), bgpRoute);
 
@@ -131,11 +117,8 @@ public class BGPRpslDocument {
 		for(RpslObject o : this.rpslObjects) {
 			if(o.getType() == ObjectType.ROUTE_SET) {
 				routeSets.put(o.getValueForAttribute(AttributeType.ROUTE_SET).toLowerCase(), new BGPRouteSet(o));
-				continue;
-			}
-			if(o.getType() == ObjectType.AS_SET) {
+			} else if(o.getType() == ObjectType.AS_SET) {
 				asSets.put(o.getValueForAttribute(AttributeType.AS_SET).toLowerCase(), new BGPAsSet(o));
-				continue;
 			}
 		}
 	}
@@ -196,26 +179,12 @@ public class BGPRpslDocument {
 	 * @return as-set object or null
 	 */
 	BGPRpslSet getASSet(String setName) {
-//		if(asSets.size() != 0) {
-//			for(RpslObject o : this.rpslObjects) {
-//				if(o.getType() != ObjectType.AS_SET)
-//					continue;
-//				//TODO construct asSet object and add to asSets
-//				
-//			}
-//		}
+		//asSets initialised at construct time
 		return asSets.get(CIString.ciString(setName));
 	}
 	
 	BGPRpslSet getRouteSet(String setName) {
-//		//Initialise routeSet mapping if empty
-//		if(routeSets.size() != 0) {
-//			for(RpslObject o : this.rpslObjects) {
-//				if(o.getType() != ObjectType.ROUTE_SET)
-//					continue;
-//				//TODO 
-//			}
-//		}
+		//routeSets initialised at construct time
 		return routeSets.get(CIString.ciString(setName));
 	}
 	
@@ -305,8 +274,8 @@ public class BGPRpslDocument {
 	 */
 	public Set<BGPRoute> getSetMemberRoutes(CIString setName) {
 		Set<BGPRoute> routeSet = new HashSet<>();
-		if(mntByRoutes.containsKey(setName)) {
-			for(BGPRoute r : mntByRoutes.get(setName))
+		if(setMemberRoutes.containsKey(setName)) {
+			for(BGPRoute r : setMemberRoutes.get(setName))
 				routeSet.add(r.clone());
 		}
 		return routeSet;			
