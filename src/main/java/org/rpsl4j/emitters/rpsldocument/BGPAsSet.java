@@ -34,7 +34,6 @@ public class BGPAsSet extends BGPRpslSet {
 				Set<BGPRoute> resolvedRoutes = memberSetObject.resolve(parentRpslDocument, visitedNodes);
 				if(prefix!=null)
 					log.warn("Prefix application requested: '" + prefix + "' this is unsupported and will not be applied");
-				//applyPrefix(resolvedRoutes, prefix); //apply prefix, if any
 
 				flattenedRoutes.addAll(resolvedRoutes);
 			} else {

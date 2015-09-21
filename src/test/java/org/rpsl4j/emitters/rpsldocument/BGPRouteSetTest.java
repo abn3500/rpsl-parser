@@ -80,7 +80,9 @@ public class BGPRouteSetTest {
 				refRouteFound=true;
 		}
 		//ensure we found those and only those
-		assertTrue(memRouteFound && refRouteFound && flattenedRoutes.size()==2);
+		assertTrue(memRouteFound);
+		assertTrue(refRouteFound);
+		assertTrue(flattenedRoutes.size()==2);
 	}
 
 }

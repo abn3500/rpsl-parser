@@ -22,7 +22,6 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
  */
 public abstract class BGPRpslSet {
 	
-	//TODO add slf4j logger
 	final static Logger log = LoggerFactory.getLogger(BGPRpslSet.class);
 	
 	protected final CIString name;

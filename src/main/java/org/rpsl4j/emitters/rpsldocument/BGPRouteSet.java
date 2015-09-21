@@ -19,9 +19,6 @@ import net.ripe.db.whois.common.rpsl.attrs.AttributeParseException;
 
 public class BGPRouteSet extends BGPRpslSet {
 	
-	//TODO add slf4j logger
-	
-	
 	public BGPRouteSet(RpslObject obj) {
 		super(obj);
 	}	
