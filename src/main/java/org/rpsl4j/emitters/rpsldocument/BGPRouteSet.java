@@ -21,6 +21,7 @@ public class BGPRouteSet extends BGPRpslSet {
 	
 	//TODO add slf4j logger
 	
+	
 	public BGPRouteSet(RpslObject obj) {
 		super(obj);
 	}	
@@ -43,8 +44,10 @@ public class BGPRouteSet extends BGPRpslSet {
 			//Try it as a prefix
 			try {
 				BGPRoute newRoute = new BGPRoute(AddressPrefixRange.parse(memberName), null);
-				if(prefix != null)
-					newRoute.appendPostfix(prefix);
+				if(prefix != null) {
+					log.warn("Encountered prefixed member '" + member + "' this is unsupported and will be ignored");
+					continue;
+				}
 				
 				flattenedRoutes.add(newRoute);
 				continue;
@@ -54,7 +57,8 @@ public class BGPRouteSet extends BGPRpslSet {
 			if(memberName.startsWith("rs-")) {
 				BGPRpslSet memberSetObject = parentRpslDocument.routeSets.get(memberName);
 				Set<BGPRoute> resolvedRoutes = memberSetObject.resolve(parentRpslDocument, visitedNodes);
-				applyPrefix(resolvedRoutes, prefix);
+				if(prefix!=null)
+					log.warn("Prefix application requested: '" + prefix + "' this is unsupported and will not be applied");
 				flattenedRoutes.addAll(resolvedRoutes);
 			}
 			

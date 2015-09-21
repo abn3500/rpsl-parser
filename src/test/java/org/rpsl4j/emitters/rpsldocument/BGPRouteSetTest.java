@@ -53,8 +53,8 @@ public class BGPRouteSetTest {
 	
 	@Test
 	public void explicitMembersTest() {
-		String routeSetWithMember				= "route-set: rs-mem\nmembers: 1.1.1.1/16^16-18\n";
-		String routeSetWithMemberAndRefMember	= "route-set: rs-mem\nmembers: 1.1.1.1/16^16-18\nmbrs-by-ref:MNTR-FOO\n";
+		String routeSetWithMember				= "route-set: rs-mem\nmembers: 1.1.1.1/16\n";
+		String routeSetWithMemberAndRefMember	= "route-set: rs-mem\nmembers: 1.1.1.1/16\nmbrs-by-ref:MNTR-FOO\n";
 		String routeMemberByRef					= "route: 2.2.2.2/8\norigin: AS5\nmnt-by: MNTR-FOO\nmember-of: rs-mem\n";
 		
 		BGPRpslDocument doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(routeSetWithMember + routeMemberByRef));
@@ -63,7 +63,7 @@ public class BGPRouteSetTest {
 		Set<BGPRoute> flattenedRoutes = doc.getRouteSet("rs-mem").resolve(doc);
 		
 		assertEquals(1, flattenedRoutes.size());
-		assertEquals("1.1.1.1/16^16-18 via null", flattenedRoutes.iterator().next().toString());
+		assertEquals("1.1.1.1/16 via null", flattenedRoutes.iterator().next().toString());
 		
 		//test with mbrs-by-ref 
 		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(routeSetWithMemberAndRefMember + routeMemberByRef));
@@ -74,7 +74,7 @@ public class BGPRouteSetTest {
 		boolean refRouteFound = false;
 		assertEquals(2, flattenedRoutes.size());
 		for(BGPRoute r : flattenedRoutes) {
-			if(r.toString().equals("1.1.1.1/16^16-18 via null"))
+			if(r.toString().equals("1.1.1.1/16 via null"))
 				memRouteFound=true;
 			if(r.toString().equals("2.2.2.2/8 via null"))
 				refRouteFound=true;

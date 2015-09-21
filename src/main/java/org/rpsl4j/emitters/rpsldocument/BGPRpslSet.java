@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.rpsl.AttributeType;
@@ -21,6 +23,7 @@ import net.ripe.db.whois.common.rpsl.RpslObject;
 public abstract class BGPRpslSet {
 	
 	//TODO add slf4j logger
+	final static Logger log = LoggerFactory.getLogger(BGPRpslSet.class);
 	
 	protected final CIString name;
 	protected Set<CIString> members = new HashSet<CIString>();
@@ -68,24 +71,6 @@ public abstract class BGPRpslSet {
 	 */
 	abstract Set<BGPRoute> resolve(BGPRpslDocument parentRpslDocument, Set<BGPRpslSet> visitedNodes);
 	
-	
-	/**
-	 * Applies the given prefix to all routes in the given set, deleting routes for which the combined prefix is invalid (as per the spec)
-	 * @param routeSet
-	 * @param prefix
-	 */
-	protected void applyPrefix(Set<BGPRoute> routeSet, String prefix) {
-		if(prefix==null)
-			return;
-		
-		for(BGPRoute r : routeSet) {
-			try {
-				r.appendPostfix(prefix);
-			} catch (IllegalArgumentException e) { //failed to mix prefixes
-				routeSet.remove(r); //TODO: check this is an acceptable time to get rid of it
-			}
-		}
-	}
 	
 	public String toString() {
 		return name + ":\n    members: " + members + "\n    mbrsByRef: " + mbrsByRef;

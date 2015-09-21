@@ -32,8 +32,9 @@ public class BGPAsSet extends BGPRpslSet {
 			if(memberName.startsWith("as-"))  {
 				BGPRpslSet memberSetObject = parentRpslDocument.asSets.get(memberName);
 				Set<BGPRoute> resolvedRoutes = memberSetObject.resolve(parentRpslDocument, visitedNodes);
-				
-				applyPrefix(resolvedRoutes, prefix); //apply prefix, if any
+				if(prefix!=null)
+					log.warn("Prefix application requested: '" + prefix + "' this is unsupported and will not be applied");
+				//applyPrefix(resolvedRoutes, prefix); //apply prefix, if any
 
 				flattenedRoutes.addAll(resolvedRoutes);
 			} else {
@@ -41,7 +42,8 @@ public class BGPAsSet extends BGPRpslSet {
 				try {
 					AutNum autNum = AutNum.parse(memberName);
 					Set<BGPRoute> resolvedRoutes = parentRpslDocument.getASRoutes(autNum.getValue());
-					applyPrefix(resolvedRoutes, prefix); //TODO: is this even a legal option in an as-set??
+					if(prefix!=null)
+						log.warn("Prefix application requested: '" + prefix + "' this is unsupported and will not be applied");
 					flattenedRoutes.addAll(resolvedRoutes);
 				} catch(AttributeParseException e) {}
 			}
