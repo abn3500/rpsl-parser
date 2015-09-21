@@ -6,6 +6,9 @@
 package org.rpsl4j.emitters.rpsldocument;
 
 import static org.junit.Assert.*;
+
+import java.util.Set;
+
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.io.RpslObjectStringReader;
 
@@ -46,6 +49,38 @@ public class BGPRouteSetTest {
 		assertTrue("route set with no mbrs-by-ref should not load any member-of routes",
 				doc.routeSets.get("rs-set").resolve(doc).size() == 0);
 		
+	}
+	
+	@Test
+	public void explicitMembersTest() {
+		String routeSetWithMember				= "route-set: rs-mem\nmembers: 1.1.1.1/16^16-18\n";
+		String routeSetWithMemberAndRefMember	= "route-set: rs-mem\nmembers: 1.1.1.1/16^16-18\nmbrs-by-ref:MNTR-FOO\n";
+		String routeMemberByRef					= "route: 2.2.2.2/8\norigin: AS5\nmnt-by: MNTR-FOO\nmember-of: rs-mem\n";
+		
+		BGPRpslDocument doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(routeSetWithMember + routeMemberByRef));
+		//doc contains one route set which doesn't permit mbrsByRef. There should only be the explicitly declared route 1.1.1.1
+		
+		Set<BGPRoute> flattenedRoutes = doc.getRouteSet("rs-mem").resolve(doc);
+		
+		assertEquals(1, flattenedRoutes.size());
+		assertEquals("1.1.1.1/16^16-18 via null", flattenedRoutes.iterator().next().toString());
+		
+		//test with mbrs-by-ref 
+		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(routeSetWithMemberAndRefMember + routeMemberByRef));
+		flattenedRoutes = doc.getRouteSet("rs-mem").resolve(doc);
+		
+		//expect two routes this time
+		boolean memRouteFound = false;
+		boolean refRouteFound = false;
+		assertEquals(2, flattenedRoutes.size());
+		for(BGPRoute r : flattenedRoutes) {
+			if(r.toString().equals("1.1.1.1/16^16-18 via null"))
+				memRouteFound=true;
+			if(r.toString().equals("2.2.2.2/8 via null"))
+				refRouteFound=true;
+		}
+		//ensure we found those and only those
+		assertTrue(memRouteFound && refRouteFound && flattenedRoutes.size()==2);
 	}
 
 }
