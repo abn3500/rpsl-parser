@@ -28,21 +28,23 @@ public class BGPAsSet extends BGPRpslSet {
 			String 	memberName = refMemberPair.getLeft(),
 					prefix = refMemberPair.getRight();
 			
+			if(prefix != null) {
+				log.warn("Encountered prefix operator'" + member + "' this is unsupported and the member will be skipped");
+				continue;
+			}
+			
 			//Test if member is a as-set
 			if(memberName.startsWith("as-"))  {
 				BGPRpslSet memberSetObject = parentRpslDocument.asSets.get(memberName);
 				Set<BGPRoute> resolvedRoutes = memberSetObject.resolve(parentRpslDocument, visitedNodes);
-				if(prefix!=null)
-					log.warn("Prefix application requested: '" + prefix + "' this is unsupported and will not be applied");
-
+				
 				flattenedRoutes.addAll(resolvedRoutes);
 			} else {
 				//Try resolve it as an AS
 				try {
 					AutNum autNum = AutNum.parse(memberName);
 					Set<BGPRoute> resolvedRoutes = parentRpslDocument.getASRoutes(autNum.getValue());
-					if(prefix!=null)
-						log.warn("Prefix application requested: '" + prefix + "' this is unsupported and will not be applied");
+
 					flattenedRoutes.addAll(resolvedRoutes);
 				} catch(AttributeParseException e) {}
 			}
