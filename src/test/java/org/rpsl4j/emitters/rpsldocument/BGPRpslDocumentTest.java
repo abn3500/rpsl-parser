@@ -36,6 +36,7 @@ public class BGPRpslDocumentTest {
 			+ "export: to AS3 2.2.2.1 at 1.1.1.1 announce AS1\n\n"
 			+ "route: 1.1.1.0/24\n"
 			+ "origin: AS1\n";
+	
 
 	BGPRpslDocument doc;
 
@@ -74,7 +75,7 @@ public class BGPRpslDocumentTest {
 		assertTrue("Peer route table should contain route with origin AS1", 
 				autNum.getTableForPeer(3, "2.2.2.1").routeSet.size() == 1);
 	}
-	
+
 	@Test
 	public void dropWithdrawnRoute() {
 		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(
@@ -83,6 +84,4 @@ public class BGPRpslDocumentTest {
 				+ "withdrawn: 19960624\n"));
 		assertTrue("withdrawn route should not be added to as routes", doc.getASRoutes(1).size() == 0);
 	}
-
-
 }

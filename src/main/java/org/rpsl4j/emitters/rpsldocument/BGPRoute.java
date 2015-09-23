@@ -44,7 +44,7 @@ public class BGPRoute implements Cloneable {
 		this.routePrefixObject = routePrefixObject;
 		this.nextHop = nextHop;
 		this.routeNetwork = routePrefixObject.getIpInterval().beginAsInetAddress().getHostAddress();
-		this.routePrefix = routePrefixObject.getIpInterval().getPrefixLength();
+		this.routePrefix = routePrefixObject.getIpInterval().getPrefixLength(); //TODO: should this consider a detached range - ie 1.1.1.1/8^16-24 ? Also, the implementation in Ipv4Resource looks unlikely to reliably return a usable result
 	}
 
 	/**
@@ -81,7 +81,7 @@ public class BGPRoute implements Cloneable {
 				return new HashSet<BGPRoute>();
 			}
 			
-			// try parse route string as AS, then as route prefix
+			// try parse route string as AS, then as a routeset/as-set, then finally as a route prefix
 			if (doc != null && routeString.matches("AS\\d{1,5}")) {
 				
 				// route string is an AS, parse it and add to dock
@@ -93,6 +93,20 @@ public class BGPRoute implements Cloneable {
 						routeObjectSet.add(r);
 					}	
 				} catch (AttributeParseException e) {}
+			} else if(routeString.startsWith("as-")) {
+				if(doc.asSets.containsKey(routeString)) {
+					for(BGPRoute r : doc.asSets.get(routeString).resolve(doc)) {
+						r.nextHop = localRouter;
+						routeObjectSet.add(r);
+					}
+				}
+			} else if(routeString.startsWith("rs-")) {
+				if(doc.routeSets.containsKey(routeString)) {
+					for(BGPRoute r : doc.routeSets.get(routeString).resolve(doc)) {
+						r.nextHop = localRouter;
+						routeObjectSet.add(r);
+					}
+				}
 			} else {	
 				//Try and parse/add the routeprefix
 				try {

@@ -5,6 +5,7 @@
 
 package org.rpsl4j.emitters.rpsldocument;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -21,6 +22,7 @@ import net.ripe.db.whois.common.io.RpslObjectStreamReader;
 import net.ripe.db.whois.common.rpsl.AttributeType;
 import net.ripe.db.whois.common.rpsl.ObjectType;
 import net.ripe.db.whois.common.rpsl.RpslObject;
+import net.ripe.db.whois.common.rpsl.attrs.AutNum;
 
 public class BGPRpslDocument {
 
@@ -34,20 +36,31 @@ public class BGPRpslDocument {
 
 	final static Logger log = LoggerFactory.getLogger(BGPRpslDocument.class);
 	
-    private Multimap<CIString, BGPRpslRoute>	setRoutes	= HashMultimap.create(); //routes by the set(s) they say they are members of (no double checking by listings in rs-set members attribute, and no validation against mbrsByRef maintainers)
-    private Multimap<Long, BGPRpslRoute>		asRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
 	
+    private Multimap<CIString, BGPRpslRoute>	setMemberRoutes	= HashMultimap.create(), //routes by the set(s) they say they are members of
+    											mntByRoutes	= HashMultimap.create(); //routes grouped by their maintainer
+    private Multimap<Long, BGPRpslRoute>		asOriginRoutes	= HashMultimap.create(); //routes by the ASs the route states as its origin
+	
+    private Multimap<CIString, Long>			setMemberAutNum = HashMultimap.create(),
+												mntByAutNum = HashMultimap.create();
+    
     //Maps of route-set/as-set RPSL objects to java representations
-    private Map<String, BGPRpslSet>			routeSets   = new HashMap<>(),
-    										asSets		= new HashMap<>();
+    Map<String, BGPRpslSet>		routeSets   = new HashMap<>(),
+    							asSets		= new HashMap<>();
     
 	private Map<String, BGPAutNum> autNumMap = new HashMap<String, BGPAutNum>();
 	
 	public BGPRpslDocument(Set<RpslObject> rpslObjects) {
 		this.rpslObjects = rpslObjects;
+		
+		//Route and AutNum objects need to be parsed first due to member-of relatioshis
 		parseRpslRouteObjects();
+		parseRpslAutNumObjects();
+		//Can now resolve sets with member-of relationships
+		parseRpslSetObjects(); 
 	}
-	
+
+
 	/**
 	 * Construct an RPSL document by iterating through {@link RpslObjectStreamReader} objects
 	 * @param rpslDocumentReader Stream to read {@link RpslObject}s from
@@ -82,22 +95,70 @@ public class BGPRpslDocument {
 		return new BGPRpslDocument(rpslObjectSet);
 	}
 	
+	/**
+	 * Parse Route type objects to identify member-of and mbrs-by-ref relationships
+	 */
 	private void parseRpslRouteObjects() {
 		for(RpslObject o : this.rpslObjects) {
 			if(o.getType() != ObjectType.ROUTE)
 				continue; //skip non Route objects
 
-			//parse as BGPRoute, grab key info and add to index
 			BGPRpslRoute bgpRoute = new BGPRpslRoute(o);
 			
 			if(bgpRoute.isWithdrawn())
 				continue;
 			
-			asRoutes.put(bgpRoute.asNumber, bgpRoute);
+			asOriginRoutes.put(bgpRoute.asNumber, bgpRoute);
 			for(CIString set : bgpRoute.parentSets) {
-				setRoutes.put(set, bgpRoute);
+				setMemberRoutes.put(set, bgpRoute);
+			}
+
+			if(bgpRoute.getMaintainer() != null)
+				mntByRoutes.put(bgpRoute.getMaintainer(), bgpRoute);
+
+		}
+	}
+	
+	/**
+	 *	Parse and build {@link BGPRouteSet} type objects
+	 */
+	private void parseRpslSetObjects() {
+		for(RpslObject o : this.rpslObjects) {
+			if(o.getType() == ObjectType.ROUTE_SET) {
+				routeSets.put(o.getValueForAttribute(AttributeType.ROUTE_SET).toLowerCase(), new BGPRouteSet(o));
+			} else if(o.getType() == ObjectType.AS_SET) {
+				asSets.put(o.getValueForAttribute(AttributeType.AS_SET).toLowerCase(), new BGPAsSet(o));
 			}
 		}
+	}
+	
+	/**
+	 * Parse AutNum type objects to identify member-of and mbrs-by-ref relationships
+	 */
+	private void parseRpslAutNumObjects() {
+		for(RpslObject o: this.rpslObjects) {
+			if(o.getType() != ObjectType.AUT_NUM)
+				continue;
+			Long autNum = AutNum.parse(o.getTypeAttribute().getCleanValue()).getValue();
+            
+			//Add to member-of etc sets
+            if(o.containsAttribute(AttributeType.MNT_BY))
+                mntByAutNum.put(o.getValueForAttribute(AttributeType.MNT_BY), autNum);
+            if(o.containsAttribute(AttributeType.MEMBER_OF)) {
+                for(CIString parentSet : o.getValuesForAttribute(AttributeType.MEMBER_OF))
+                    setMemberAutNum.put(parentSet, autNum);
+            }
+		}
+	}
+	
+	
+	/**
+	 * Get route objects that claim membership in the given set. (Used for processing mbrs-by-ref)
+	 * @param setName
+	 * @return
+	 */
+	public Collection<BGPRpslRoute> getSetRoutes(CIString setName) {
+		return setMemberRoutes.get(setName);
 	}
 	
 	/**
@@ -122,9 +183,7 @@ public class BGPRpslDocument {
 		//Cache autnum map
 		if(this.autNumMap.size() != 0)
 			return this.autNumMap;
-		
-		HashMap<String, BGPAutNum> autNumMap = new HashMap<String, BGPAutNum>();
-		
+				
 		//Iterate through object set to find aut-num objects
 		for(RpslObject o: this.rpslObjects) {
 			if(o.getType() != ObjectType.AUT_NUM)
@@ -133,29 +192,12 @@ public class BGPRpslDocument {
 			
 			//TODO check and handle case where asNumber is already inserted
 			autNumMap.put(asNumber, new BGPAutNum(o, this));
+			
+			//Add to member-of etc sets
+			
 		}
 		
-		//cache and return
-		this.autNumMap = autNumMap;
 		return autNumMap;
-	}
-	
-	/**
-	 * Generate or return the BGPRpslSet object representing the route-set of the provided name
-	 * @param setName name of route-set object to retrieve
-	 * @return route-set object or null
-	 */
-	BGPRpslSet getRouteSet(String setName) {
-		//Initialise routeSet mapping if empty
-		if(routeSets.size() != 0) {
-			for(RpslObject o : this.rpslObjects) {
-				if(o.getType() != ObjectType.ROUTE_SET)
-					continue;
-				//TODO construct routeset object and add to routeSets
-			}
-		}
-		
-		return routeSets.get(setName);
 	}
 	
 	/**
@@ -164,16 +206,13 @@ public class BGPRpslDocument {
 	 * @return as-set object or null
 	 */
 	BGPRpslSet getASSet(String setName) {
-		//Initialise routeSet mapping if empty
-		if(routeSets.size() != 0) {
-			for(RpslObject o : this.rpslObjects) {
-				if(o.getType() == ObjectType.AS_SET)
-					continue;
-				//TODO construct asSet object and add to asSets
-			}
-		}
-		
-		return asSets.get(setName);
+		//asSets initialised at construct time
+		return asSets.get(CIString.ciString(setName));
+	}
+	
+	BGPRpslSet getRouteSet(String setName) {
+		//routeSets initialised at construct time
+		return routeSets.get(CIString.ciString(setName));
 	}
 	
 	/**
@@ -234,10 +273,65 @@ public class BGPRpslDocument {
 	public Set<BGPRoute> getASRoutes(long autNum) {
 		Set<BGPRoute> routeSet = new HashSet<>();
 		//Check if AS has declared route objects
-		if(asRoutes.containsKey(autNum)) {
-			for(BGPRoute r : asRoutes.get(autNum))
+		if(asOriginRoutes.containsKey(autNum)) {
+			for(BGPRoute r : asOriginRoutes.get(autNum))
 				routeSet.add(r.clone());
 		}
 		return routeSet;
+	}
+	
+	/**
+	 * Return a copy of the {@link BGPRoute}s maintained by a particular maintainer; declared as RPSL Route objects.
+	 * @return copy of maintainer's routes
+	 */
+	public Set<BGPRoute> getMntByRoutes(CIString maintainer) {
+		Set<BGPRoute> routeSet = new HashSet<>();
+		if(mntByRoutes.containsKey(maintainer)) {
+			for(BGPRoute r : mntByRoutes.get(maintainer))
+				routeSet.add(r.clone());
+		}
+		return routeSet;			
+	}
+	
+	/**
+	 * Return a copy of the {@link BGPRoute}s that are members-of a route set
+	 * @param maintainer set name to query routes for
+	 * @return copy of set's member routes
+	 */
+	public Set<BGPRoute> getSetMemberRoutes(CIString setName) {
+		Set<BGPRoute> routeSet = new HashSet<>();
+		if(setMemberRoutes.containsKey(setName)) {
+			for(BGPRoute r : setMemberRoutes.get(setName))
+				routeSet.add(r.clone());
+		}
+		return routeSet;			
+	}
+	
+	/**
+	 * Return the set of AutNums maintained by a provided maintainer
+	 * @param maintainer set name to query autnums for
+	 * @return maintainers autnums
+	 */
+	public Set<Long> getMntByAutNums(CIString maintainer) {
+		Set<Long> autNumSet = new HashSet<>();
+		if(mntByAutNum.containsKey(maintainer)) {
+			for(Long autNum : mntByAutNum.get(maintainer))
+				autNumSet.add(autNum);
+		}
+		return autNumSet;			
+	}
+	
+	/**
+	 * Return the set of AutNums that are members-of an as-set
+	 * @param setName name of as-set to query
+	 * @return set's member autnums
+	 */
+	public Set<Long> getSetMemberAutNums(CIString setName) {
+		Set<Long> autNumSet = new HashSet<>();
+		if(setMemberAutNum.containsKey(setName)) {
+			for(Long autNum : setMemberAutNum.get(setName))
+				autNumSet.add(autNum);
+		}
+		return autNumSet;	
 	}
 }
