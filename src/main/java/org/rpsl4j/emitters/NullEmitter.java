@@ -8,6 +8,7 @@ package org.rpsl4j.emitters;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import org.rpsl4j.OutputEmitterProvider;
 
 import net.ripe.db.whois.common.rpsl.RpslObject;
 

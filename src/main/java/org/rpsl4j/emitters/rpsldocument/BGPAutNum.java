@@ -47,6 +47,7 @@ public class BGPAutNum {
 	/**
 	 * Initialise a new BGPAutNum instance and generate its route maps
 	 * @param object aut-num RPSL object
+	 * @param doc BGPRpslDocument the AutNum is a member of. Used for set resolving.
 	 */
 	public BGPAutNum(RpslObject object, BGPRpslDocument doc) {
 		//Sanity check the provided object

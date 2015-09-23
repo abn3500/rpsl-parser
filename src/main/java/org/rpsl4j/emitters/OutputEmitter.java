@@ -7,11 +7,12 @@ package org.rpsl4j.emitters;
 
 import java.util.Map;
 import java.util.Set;
+import org.rpsl4j.OutputEmitterProvider;
 
 import net.ripe.db.whois.common.rpsl.RpslObject;
 
 /**
- * Interface for {@link OutputEmitter}s used with {@link OutputWriter}
+ * Interface for {@link OutputEmitterProvider}
  * @author Benjamin George Roberts
  * @author Nathan Kelly
  */

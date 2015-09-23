@@ -99,6 +99,7 @@ public class BGPInetRtr {
 	 * Instantiate a set of BGPInetRtr speakers declared in an RPSL inet-rtr object.
 	 * One instance will be created for each if-addr attribtue of unique address.
 	 * @param object inet-rtr instance of {@link RpslObject}
+	 * @param autNumObject the aut-num the speakers are members of
 	 * @return Set of BGPInetRtr speakers
 	 */
 	public static Set<BGPInetRtr> getSpeakerInstances(RpslObject object, BGPAutNum autNumObject) {		
@@ -184,7 +185,7 @@ public class BGPInetRtr {
 
 	/**
 	 * Get the Autnonomous System number of the inet-rtr
-	 * @return
+	 * @return aut-system number
 	 */
 	public long getSpeakerAutNum() {
 		return speakerAutNum;

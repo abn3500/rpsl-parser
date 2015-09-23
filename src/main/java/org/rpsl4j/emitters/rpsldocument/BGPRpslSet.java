@@ -30,6 +30,7 @@ public abstract class BGPRpslSet {
 
 	/**
 	 * Build set object and extract names of member sets etc.
+	 * @param setObject as-set or route-set object to instantiate from 
 	 */
 	public BGPRpslSet(RpslObject setObject) {
 		name = setObject.getTypeAttribute().getCleanValue();
@@ -43,7 +44,7 @@ public abstract class BGPRpslSet {
 	
 	/**
 	 * Separate address prefix (eg. '^+') from referenced route-set, as-set or AS
-	 * @param referencedObject
+	 * @param referencedObject name of reference
 	 * @return A pair of: (referenced item, prefix or null)
 	 */
 	protected static Pair<String, String> splitPrefix(String referencedObject) {
@@ -57,6 +58,7 @@ public abstract class BGPRpslSet {
 	
 	/**
 	 * Recursively resolve the set of BGPRoute objects contained within this set
+	 * @param parentRpslDocument document that set resolves members from
 	 * @return clone of {@link BGPRoute} objects contained by set
 	 */
 	public Set<BGPRoute> resolve(BGPRpslDocument parentRpslDocument) {
@@ -65,6 +67,7 @@ public abstract class BGPRpslSet {
 	
 	/**
 	 * Recursively resolve the set, stopping if the called object is already in the set of visited nodes
+	 * @param parentRpslDocument document used to resolve members
 	 * @param visitedNodes Set of nodes that have already been resolved
 	 * @return clone of {@link BGPRoute} objects contained by set
 	 */

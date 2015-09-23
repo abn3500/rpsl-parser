@@ -30,7 +30,8 @@ public class BGPRouteTable implements Iterable<BGPRoute> {
 	 * @param peerAddress Address of the peer the table is exported to (can be {@link BGPRoute#ANY_ADDRESS})
 	 * @param speakerName Name of the AutNum the speaker is associated with
 	 * @param routeSet Routes to populate table with
-	 * @throws AttributeParseException
+	 * @throws AttributeParseException malformed rpsl statement
+	 * @throws IllegalArgumentException malformed aut-num of address
 	 */
 	public BGPRouteTable(long peerAutNum, String peerAddress,
 			String speakerName, Collection<BGPRoute> routeSet) {
@@ -63,7 +64,7 @@ public class BGPRouteTable implements Iterable<BGPRoute> {
 	 * @param peerAutNum AS the table is exported to
 	 * @param peerAddress Address of the peer the table is exported to (can be {@link BGPRoute#ANY_ADDRESS})
 	 * @param speakerAutNum AutNum object speaker originates from. Used to lookup route table
-	 * @throws AttributeParseException
+	 * @throws AttributeParseException malformed rpsl statement
 	 */
 	public BGPRouteTable(long peerAutNum, String peerAddress, BGPAutNum speakerAutNum) {
 		//Initialise with empty route set
@@ -79,7 +80,7 @@ public class BGPRouteTable implements Iterable<BGPRoute> {
  	 * Construct a new BGPRouteTable by querying a {@link BGPAutNum} instance for routes exported to an entire AS
 	 * @param peerAutNum AS the table is exported to
 	 * @param speakerAutNum AutNum object speaker originates from. Used to lookup route table
-	 * @throws AttributeParseException
+	 * @throws AttributeParseException malformed rpsl statement
 	 */
 	public BGPRouteTable(long peerAutNum, BGPAutNum speakerAutNum) {
 		this(peerAutNum, BGPRoute.ANY_ADDRESS, speakerAutNum);

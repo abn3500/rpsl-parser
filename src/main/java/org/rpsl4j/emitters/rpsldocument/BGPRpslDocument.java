@@ -154,8 +154,8 @@ public class BGPRpslDocument {
 	
 	/**
 	 * Get route objects that claim membership in the given set. (Used for processing mbrs-by-ref)
-	 * @param setName
-	 * @return
+	 * @param setName name of route set to retrieve routes of
+	 * @return set of routes declared as member of set
 	 */
 	public Collection<BGPRpslRoute> getSetRoutes(CIString setName) {
 		return setMemberRoutes.get(setName);
@@ -282,6 +282,7 @@ public class BGPRpslDocument {
 	
 	/**
 	 * Return a copy of the {@link BGPRoute}s maintained by a particular maintainer; declared as RPSL Route objects.
+	 * @param maintainer name of maintainer to retrieve routes of
 	 * @return copy of maintainer's routes
 	 */
 	public Set<BGPRoute> getMntByRoutes(CIString maintainer) {
@@ -295,7 +296,7 @@ public class BGPRpslDocument {
 	
 	/**
 	 * Return a copy of the {@link BGPRoute}s that are members-of a route set
-	 * @param maintainer set name to query routes for
+	 * @param setName name of set to retrieve member routes of
 	 * @return copy of set's member routes
 	 */
 	public Set<BGPRoute> getSetMemberRoutes(CIString setName) {
