@@ -11,6 +11,7 @@ import java.util.Set;
 
 import net.ripe.db.whois.common.domain.CIString;
 import net.ripe.db.whois.common.io.RpslObjectStringReader;
+import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
 
 import org.junit.Test;
 
@@ -49,6 +50,39 @@ public class BGPRouteSetTest {
 		assertTrue("route set with no mbrs-by-ref should not load any member-of routes",
 				doc.routeSets.get("rs-set").resolve(doc).size() == 0);
 		
+	}
+	
+	@Test
+	public void recursiveResolveTest() {
+		final String 	routeSetWithMembers				= "route-set: rs-root\nmembers: 1.1.1.0/24, rs-recur\n\n",
+					 	routeSetRecurDifferentMember 	= "route-set: rs-recur\nmembers: 1.1.2.0/24\n\n",
+					 	routeSetRecurSameMember			= "route-set: rs-recur\nmembers: 1.1.1.0/24\n\n",
+					 	routeSetRecurCyclicMember		= "route-set: rs-recur\nmembers: 1.1.2.0/24, rs-root\n\n";
+		
+		//Test that set resolves child sets
+		BGPRpslDocument doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(routeSetWithMembers + routeSetRecurDifferentMember));
+		Set<BGPRoute> resolvedRoutes = doc.getRouteSet("rs-root").resolve(doc);
+		
+		assertEquals("Route set with recursive member should contain route from each", 2, resolvedRoutes.size());
+		assertTrue("Root route set route is resolved", resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), null)));
+		assertTrue("Root route set includes recursive members route", resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.2.0/24"),null)));
+		
+		//Test that unique route is only added once even if two sets
+		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(routeSetWithMembers+ routeSetRecurSameMember));
+		resolvedRoutes = doc.getRouteSet("rs-root").resolve(doc);
+		
+		assertEquals("Unique route should only be added to set once even if included in parent and child set", 1, resolvedRoutes.size());
+		assertTrue(resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), null)));
+		
+		//Test that recursive and cyclic sets resolve correctly
+		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(routeSetWithMembers + routeSetRecurCyclicMember));
+		resolvedRoutes = doc.getRouteSet("rs-root").resolve(doc);
+		
+		assertTrue("Route sets with cyclic dependencies should contain all unique member routes", 
+				resolvedRoutes.size() == 2 && 
+				resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), null)) &&
+				resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.2.0/24"),null)));
+		assertEquals("Equivilent cycles of route sets contain the same members", doc.getRouteSet("rs-root").resolve(doc), doc.getRouteSet("rs-recur").resolve(doc));
 	}
 	
 	@Test

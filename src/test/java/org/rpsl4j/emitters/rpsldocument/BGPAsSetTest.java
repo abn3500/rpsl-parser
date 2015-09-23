@@ -6,7 +6,11 @@
 package org.rpsl4j.emitters.rpsldocument;
 
 import static org.junit.Assert.*;
+
+import java.util.Set;
+
 import net.ripe.db.whois.common.io.RpslObjectStringReader;
+import net.ripe.db.whois.common.rpsl.attrs.AddressPrefixRange;
 
 import org.junit.Test;
 
@@ -45,5 +49,68 @@ public class BGPAsSetTest {
 		assertTrue("as set with no mbrs-by-ref should not load any member-of routes",
 				doc.asSets.get("rs-set").resolve(doc).size() == 0);
 	}
-
+	
+	@Test
+	public void recursiveResolveTest() {
+		final String 	asOneRoute				= 	"aut-num: AS1\nas-name: AS1\n\n" +
+													"route: 1.1.1.0/24\norigin: AS1\n\n",
+						asTwoRouteDifferent		=	"aut-num: AS2\nas-name: AS2\n\n" +
+													"route: 1.1.2.0/24\norigin: AS2\n\n",
+						asTwoRouteSame			=	"aut-num: AS2\nas-name: AS2\n\n" +
+													"route: 1.1.1.0/24\norigin: AS2\n\n",							
+						asSetRoot				=	"as-set: as-root\nmembers: AS1, as-recur\n\n",
+						asSetRecur				= 	"as-set: as-recur\nmembers: AS2\n\n",
+						asSetRecurCyclic		= 	"as-set: as-recur\nmembers: AS2, as-root\n\n";
+		
+		//Test that set resolves child sets
+		BGPRpslDocument doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(asOneRoute + asTwoRouteDifferent + asSetRoot + asSetRecur));
+		Set<BGPRoute> resolvedRoutes = doc.getASSet("as-root").resolve(doc);
+		
+		assertEquals("AS set with recursive member should contain route from each", 2, resolvedRoutes.size());
+		assertTrue("Root as set route is resolved", resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), null)));
+		assertTrue("Root as set includes recursive members route", resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.2.0/24"),null)));
+		
+		//Test that unique route is only added once even if two sets
+		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(asOneRoute + asTwoRouteSame + asSetRoot + asSetRecur));
+		resolvedRoutes = doc.getASSet("as-root").resolve(doc);
+		
+		assertEquals("Unique route should only be added to set once even if included in parent and child set", 1, resolvedRoutes.size());
+		assertTrue(resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), null)));
+		
+		//Test that recursive and cyclic sets resolve correctly
+		doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(asOneRoute + asTwoRouteDifferent + asSetRoot + asSetRecurCyclic));
+		resolvedRoutes = doc.getASSet("as-root").resolve(doc);
+		
+		assertTrue("As sets with cyclic dependencies should contain all unique member routes", 
+				resolvedRoutes.size() == 2 && 
+				resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), null)) &&
+				resolvedRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.2.0/24"),null)));
+		assertEquals("Equivilent cycles of as sets contain the same members", doc.getASSet("as-root").resolve(doc), doc.getASSet("as-recur").resolve(doc));
+	}
+	
+	@Test
+	public void explicitMembersTest() {
+		final String 	asOneRoute	= 	"aut-num: AS1\nas-name: AS1\n\n" +
+										"route: 1.1.1.0/24\norigin: AS1\n\n",
+						asTwoRoute	=	"aut-num: AS2\nas-name: AS2\n\n" +
+										"route: 1.1.2.0/24\norigin: AS2\n\n",
+						asSetOne 	= 	"as-set: as-setone\nmembers: AS1\n\n",
+						asSetBoth	=	"as-set: as-setboth\nmembers: AS1, AS2\n\n";
+		
+		BGPRpslDocument doc = BGPRpslDocument.parseRpslDocument(new RpslObjectStringReader(asOneRoute + asTwoRoute + asSetOne + asSetBoth));
+		Set<BGPRoute> 	setOneRoutes = doc.getASSet("as-setone").resolve(doc),
+						setBothRoutes = doc.getASSet("as-setboth").resolve(doc);
+		
+		//Test that only included AS is resolved
+		assertTrue("Only routes with origin of included AS should be resolved in as-set", setOneRoutes.size() == 1);
+		assertTrue("Only routes with origin of included AS should be resolved in as-set", 
+				setOneRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), null)) &&
+				!setOneRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.2.0/24"), null)));
+		
+		//Test that set with two AS's has routes from both
+		assertTrue("Set should resolve routes from all member AS's", setBothRoutes.size() == 2);
+		assertTrue("Set should resolve routes from all member AS's",
+				setBothRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.1.0/24"), null)) &&
+				setBothRoutes.contains(new BGPRoute(AddressPrefixRange.parse("1.1.2.0/24"), null)));		
+	}
 }
