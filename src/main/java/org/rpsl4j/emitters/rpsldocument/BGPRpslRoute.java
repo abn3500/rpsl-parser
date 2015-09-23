@@ -79,7 +79,8 @@ public class BGPRpslRoute extends BGPRoute implements Cloneable {
 		
 		BGPRpslRoute otherRoute = (BGPRpslRoute) other;
 		
-		return asNumber == otherRoute.asNumber && parentSets.equals(otherRoute.parentSets);
+		//We don't compare AS as it results in doubles when resolving as sets
+		return parentSets.equals(otherRoute.parentSets);
 	}
 	
 	/**
