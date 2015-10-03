@@ -51,14 +51,14 @@ Parsing of an aut-num's export statements occurs in `BGPAutNum#generateRouteMaps
 #### Find the export peers ###
 First the peering specification of the export statement is parsed (`BGPAutNum#getExportPeers`) and a set of "export peers" is returned.
 The type of this set is `Set<Pair<Pair<Long, String>, String>>` and represents the type `[((Destination-Autnum, Peer-Ip), Exporting-Router-Ip)]`.
-For example, the peering specification `AS2 2.2.2.2 at 1.1.1.1` would result in the export peer `((2, "2.2.2.2"), "1.1.1.1")`. Routes exported to an entire AS (`AS2 at 1.1.1.1` will have a "Peer-Ip" of "0.0.0.0".
+For example, the peering specification `AS2 2.2.2.2 at 1.1.1.1` would result in the export peer `((2, "2.2.2.2"), "1.1.1.1")`. Routes exported to an entire AS (`AS2 at 1.1.1.1`) will have a "Peer-Ip" of "0.0.0.0".
 
 It is important to mention that the "exporting-router-ip" is used as the origin of the exported routes and is used by the `BGPInetRtr` class to determine which routes it will export.
 This is discussed later in this document.
 
 #### Parse the export actions ####
 After identifying the peers, the actions of an export statement are parsed.
-An example of an action statement is `action pref = 10;`. These are passed onto and applied to the routes to be exported and is implemented by `BGPAutNum#resolveActions`.
+An example of an action statement is `action pref = 10;`. These actions are applied to the routes being exported exported, and are parsed by the `BGPAutNum#resolveActions` method.
 
 #### Resolve the routes ####
 Having identified the peers and action statements, the export attribute is then passed to `BGPRoute#resolveRoutes`.
@@ -115,7 +115,7 @@ mnt-by: rpsl4j-team-members
 ```
 
 ### rpsl4j behavior ###
-Parsing route objects into `BGPRpslRoute` instances is the first thing `BGPRpslDocument` when constructed. This is because they are required for the construction and resolution of `route-set` objects.
+Parsing route objects into `BGPRpslRoute` instances is the first thing `BGPRpslDocument` does when constructed. This is because they are required for the construction and resolution of `route-set` objects.
 Based on their `origin`, `member` of and `mnt-by` values, they are "cached" in different maps for lookup by set objects.
 Withdrawn routes are dropped.
 

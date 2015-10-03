@@ -18,7 +18,7 @@ The credentials of a Sonatype OSS account authorized to deploy rpsl4j packages m
  ```
 Please refer to the Maven page on [password encryption](https://maven.apache.org/guides/mini/guide-encryption.html) for advice on securing your OSS password.
 
-_Existing maintainers can request authorizations on behalf of others by appending the relevant [Jira ticket](https://issues.sonatype.org/browse/OSSRH-15835) on Sonatype_
+_Existing maintainers can request OSS access behalf of new maintainers by appending the relevant [Jira ticket](https://issues.sonatype.org/browse/OSSRH-15835) on Sonatype_
 
 ## Deploying and promoting a release
 Now that your machine has been configured, deploying rpsl4j packages is relatively straight forward:

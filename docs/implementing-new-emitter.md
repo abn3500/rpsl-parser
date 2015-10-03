@@ -26,7 +26,7 @@ These arguments are passed to the emitter using the `setArguments` method with t
 Emitters do not need to accept any arguments and can leave the method empty.
 
 ### `Map<String, String> validArguments()`
-The `org.rpsl4j.App` class also provides the users with a list arguments supported by the emitter by calling `validArguments()`.
+The `org.rpsl4j.App` class also provides the user, via the `org.rpl4j.App` class, with a list of arguments supported by the emitter by calling `validArguments()`
 This should return a map with the name of an accepted argument as the key and a short description of the argument as the value.
 Emitters not accepting any arguments may return an empty map.
 
